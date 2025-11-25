@@ -7,3 +7,13 @@
   tags:
     - vm
     - vm.security
+
+- include_tasks:
+    file: access.yml
+    apply:
+      tags:
+        - vm
+        - vm.access
+  tags:
+    - vm
+    - vm.access

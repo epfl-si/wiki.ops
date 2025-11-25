@@ -1,0 +1,17 @@
+- ansible.posix.authorized_key:
+    user: root
+    exclusive: true
+    key: |
+      {% for _key in _keys %}
+      {{ _key }}
+      {% endfor %}
+  vars:
+    _keys:
+      - >-
+        {{ lookup("url", "https://github.com/domq.keys") }} Dominique Quatravaux
+      - >-
+        {{ lookup("url", "https://github.com/multiscan.keys") }} Giovanni Cangiani
+      # Zakari Karahaçane, Qim Info
+      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDDQduHotU08cMtWzQPJtFD1ECXgOTIQjCBX6Aj/WcnMybsn1Jc38+YbmnHX4q/Kr0LfCfvv2PIkPGEon6YqGKxrFvzaRjj62wEFhJTGB/rgPDdtZl5FB5h8T9Vyl0USfBiHZVPbTLCnI8cCCRDduKU5GbUeRpcENTxM5rlJtpPvwK9bNZmLHIkBhtzcQqwyUp8K2OCmebPK9E1zD3fn7YwU6//LGP4aal2L6f8r9eIC00YOmUmFioEwUzXFZl3zBLFKpvfuYLNrSmpl7wC/zKVbKcrHgKl6G440saqmHreC7OV3Y9QjeVayJrcHWUev4781ETLqlfWBs5egqIgRpxvHZ+6WX8DzqkYkBoKMO61Q4DgJgDX6OwXA+xs/ypMbtKapwEjz9MkYPyzlOR213iNt9Z9xtT1PNc+xj1+0RrAXghmjQIcajtSdaCZLS3DP7gvFKtatkmVqWR0KNEx9wtzCULgJ/ljpIGifHjG9N1pcyiP/n9vM3uCIxyNLVsCDBE= zakari.karahacane@MacBook-Pro-de-Zakari.local
+      # Alexandre Vidal, Qim Info
+      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDNre1mVjH2uzhg+PrafWm+3ZI35xUZxDQ/0NBsPBkgE0t60JviiwH9JF/H+WmlscsA98x7F9NHy7MLXL6uigmX9/v33uimX8n4hhzBFb5Fs8uRr/sDkKPDdoqRh7nv6iOVCL/FWeuxjMybkG4dzqPbUd7wnwNlx8K+I6qjDHqDSkZgI22yn12lECcFZjEG98lLSt6ZIp4WDgk1ICgQDalcoyviAgiIikLqYpN90lfnnVqjxQCwjiNdSNg9jmLBsAdI4K9OpV+Nit5UYLM0hdsNTmaRm75lUcen7An66hqPRmuUklg5jErkGTYqYxeB1mws3ZdBhBFFPitN0Ubc6Qry1cU2DtD2933iY1obPuXHo9NzD0Gu20J/XCHh0TWBVOOkoaEuDUL4YPejlHD00FxSlSofWo7B2alaTLDtRZ9WrLBMJI9v1tY3uTQNa3IHXAx/5pt9JTqHkVQDxc5mk6TByF2u/1abYbQLyDwP3JBufZyhJ8fTpfMTt4mSDeunu8zEVYD5/PDRE6ekpyrxPgO/vpg6CNitOx+7X0xRewdk3wUU5KH6kBTCKJ5V3MyQsplXchJCXI4eMPFhKsK/pa7aqmMzYTswXQEEEGAp8TDF1n9R0Mzf1PGFqO7PZGBwYUzfTUCfBuGyUU386SyPgYRQQdqYEnij5p41Y0N6cwB4Qw== qiminfo\avi013@DESKTOP-NHHDSE8
