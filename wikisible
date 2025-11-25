@@ -1,0 +1,76 @@
+#!/bin/bash
+#
+# This is a wrapper around ansible / ansible-playbook.
+#
+# Usage ("ansible" mode):
+#
+#   ./wikisible -m raw all -a 'date'
+#
+# Usage ("ansible-playbook" mode):
+#
+#   ./wikisible
+#
+#
+# If you are unfamiliar with Ansible, read up on it at
+# - https://www.ansible.com/overview/how-ansible-works
+# - https://github.com/jdauphant/awesome-ansible
+
+cd "$(cd "$(dirname "$0")" && /bin/pwd)"
+
+ansible_suitcase_dir () {
+    echo $PWD/ansible-deps-cache
+}
+
+ensure_suitcase () {
+    if ! test -f ansible-deps-cache/.versions 2>/dev/null; then
+        curl https://raw.githubusercontent.com/epfl-si/ansible.suitcase/master/install.sh | \
+            SUITCASE_DIR="$(ansible_suitcase_dir)" \
+            SUITCASE_ANSIBLE_VERSION=13.0.0 \
+            SUITCASE_ANSIBLE_REQUIREMENTS=requirements.yml \
+            SUITCASE_WITH_EYAML=0 \
+            bash -x
+    fi
+
+    . "$(ansible_suitcase_dir)"/lib.sh
+    ensure_ansible_runtime
+}
+
+ensure_suitcase
+
+inventory_mode="test"
+inventories () {
+    echo -n "-i inventory/test.yml"
+    case "$inventory_mode" in
+        test-and-prod) echo -n " -i inventory/production.yml" ;;
+    esac
+}
+
+###########################################################################
+
+mode=ansible-playbook
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+        --prod)
+            inventory_mode="test-and-prod"
+            shift ;;
+        -m) mode=ansible
+            ansible_args+=("-m")
+            shift ;;
+        *)
+            ansible_args+=("$1")
+            shift ;;
+    esac
+done
+
+set -e
+
+case "$mode" in
+    ansible-playbook)
+        ansible-playbook $playbook_flags $(inventories) "${ansible_args[@]}" \
+                         -e "wikisible_cwd=$OLDPWD" playbook.yml
+        ;;
+    ansible)
+        ansible $(inventories) "${ansible_args[@]}"
+        ;;
+esac

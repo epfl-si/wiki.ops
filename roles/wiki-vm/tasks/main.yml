@@ -1,0 +1,9 @@
+- include_tasks:
+    file: security.yml
+    apply:
+      tags:
+        - vm
+        - vm.security
+  tags:
+    - vm
+    - vm.security
