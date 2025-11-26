@@ -1,0 +1,17 @@
+- name: CentOS 9 stream
+  dnf:
+    disable_gpg_check: true
+    name:
+      - https://mirror.rackspace.com/centos-stream/9-stream/BaseOS/x86_64/os/Packages/centos-gpg-keys-9.0-30.el9.noarch.rpm
+      - https://mirror.rackspace.com/centos-stream/9-stream/BaseOS/x86_64/os/Packages/centos-stream-repos-9.0-30.el9.noarch.rpm
+
+- name: Disable all CentOS repositories
+  register: _disable_script
+  changed_when: >-
+    "sed" in _disable_script.stderr
+  shell:
+    cmd: |
+      set -e -x
+      grep -q "enabled=1" /etc/yum.repos.d/centos*.repo || exit 0
+
+      sed -i.ansiblebak -e 's|enabled=1|enabled=0|g' /etc/yum.repos.d/centos*.repo

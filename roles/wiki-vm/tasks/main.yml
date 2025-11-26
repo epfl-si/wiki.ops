@@ -17,3 +17,13 @@
   tags:
     - vm
     - vm.access
+
+- include_tasks:
+    file: centos.yml
+    apply:
+      tags:
+        - vm
+        - vm.centos
+  tags:
+    - vm
+    - vm.centos
