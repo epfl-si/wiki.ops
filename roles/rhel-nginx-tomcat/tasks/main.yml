@@ -1,0 +1,11 @@
+- include_tasks:
+    file: tomcat.yml
+    apply:
+      tags: [ tomcat ]
+  tags: [ tomcat ]
+
+- include_tasks:
+    file: nginx.yml
+    apply:
+      tags: [ nginx ]
+  tags: [ nginx ]

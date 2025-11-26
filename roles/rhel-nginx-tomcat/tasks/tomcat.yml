@@ -1,0 +1,10 @@
+
+- name: Tomcat
+  dnf:
+    name: tomcat9
+
+- name: systemd service for Tomcat enabled and started
+  ansible.builtin.systemd_service:
+    name: tomcat
+    enabled: true
+    state: started

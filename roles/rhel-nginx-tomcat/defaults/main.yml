@@ -1,0 +1,2 @@
+nginx_tomcat_tls_prefix: /etc/nginx/tls/tomcat
+nginx_tomcat_dn_o: EPFL

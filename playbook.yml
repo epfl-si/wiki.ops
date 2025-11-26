@@ -3,4 +3,7 @@
   roles:
     - epfl_si.katello_dsi.katello_fleet_member
     - roles/wiki-vm
+    - role: roles/rhel-nginx-tomcat
+      vars:
+        nginx_tomcat_dn_cn: "{{ inventory_web_hostname }}"
     - roles/wiki-app
