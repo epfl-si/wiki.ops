@@ -1,0 +1,9 @@
+- include_tasks:
+    file: platform.yml
+    apply:
+      tags:
+        - app
+        - app.platform
+  tags:
+    - app
+    - app.platform
