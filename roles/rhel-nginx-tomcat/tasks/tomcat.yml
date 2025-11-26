@@ -1,7 +1,3 @@
-- name: OpenJDK 17 (from CentOS)
-  dnf:
-    name: java-17-openjdk-devel
-    enablerepo: appstream
 
 - name: Tomcat
   dnf:
