@@ -7,3 +7,13 @@
   tags:
     - app
     - app.platform
+
+- include_tasks:
+    file: storage.yml
+    apply:
+      tags:
+        - app
+        - app.storage
+  tags:
+    - app
+    - app.storage
