@@ -1,7 +1,6 @@
-
 - name: Tomcat
   dnf:
-    name: tomcat9
+    name: tomcat
 
 - name: systemd service for Tomcat enabled and started
   ansible.builtin.systemd_service:
