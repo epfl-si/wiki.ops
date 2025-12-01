@@ -1,9 +1,69 @@
-- name: Tomcat
+- name: Tomcat (from distro)
   dnf:
     name: tomcat
+
+- name: "{{ tomcat_install_dir }}"
+  ansible.builtin.file:
+    path: "{{ tomcat_install_dir }}"
+    state: directory
+    recurse: yes
+
+- vars:
+    _tomcat_archive_basename: "{{ tomcat_archive_url | basename }}"
+    _tomcat_archive_tmp: "{{ tomcat_download_dir }}/{{ _tomcat_archive_basename }}"
+    _tomcat_stem: >-
+      {{ _tomcat_archive_basename
+      | regex_replace('^apache-tomcat-(.*)[.]tar[.]gz$', '\1') }}
+    _tomcat_target_dir: "{{ tomcat_install_dir }}/apache-tomcat-{{ _tomcat_stem }}"
+  block:
+
+  - name: "{{ _tomcat_archive_tmp }}"
+    ansible.builtin.get_url:
+      url: "{{ tomcat_archive_url }}"
+      dest: "{{ _tomcat_archive_tmp }}"
+
+  - name: "{{ _tomcat_target_dir }}"
+    ansible.builtin.unarchive:
+      remote_src: yes
+      src: "{{ _tomcat_archive_tmp }}"
+      dest: "{{ _tomcat_target_dir | dirname }}"
+      exclude: >-
+        {{ tomcat_symlinks | map(attribute="stem") }}
+      owner: root
+      group: root
+      mode: "u=rwX,g=rX,o=rX"
+
+  - with_items: "{{ tomcat_symlinks }}"
+    name: "Symlinks under {{ _tomcat_target_dir }}"
+    ansible.builtin.file:
+      state: link  # Name's Link. Sym Link.
+      force: yes
+      # Yet another stupid Python proggie that literally can't make heads or tails of symlinks:
+      src: "{{ item.target }}"
+      dest: "{{ _tomcat_target_dir }}/{{ item.stem }}"
+
+  - name: /etc/sysconfig/tomcat
+    ansible.builtin.copy:
+      dest: /etc/sysconfig/tomcat
+      content: |
+        # This file is managed with Ansible.
+        # DO NOT EDIT
+        CATALINA_HOME="{{ _tomcat_target_dir }}"
+        CATALINA_BASE="{{ _tomcat_target_dir }}"
+    register: _tomcat_sysconfig
+
+  - name: "{{ tomcat_logs_dir }} permissions"
+    ansible.builtin.file:
+      path: "{{ tomcat_logs_dir }}"
+      state: directory
+      recurse: yes
+      owner: "{{ tomcat_user }}"
+      group: "{{ tomcat_group }}"
 
 - name: systemd service for Tomcat enabled and started
   ansible.builtin.systemd_service:
     name: tomcat
     enabled: true
-    state: started
+    state: >-
+     {{ "restarted" if _tomcat_sysconfig | default({}) is changed
+     else "started" }}
