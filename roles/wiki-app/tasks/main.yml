@@ -17,3 +17,15 @@
   tags:
     - app
     - app.storage
+
+- when: >-
+    "app.migrate" in ansible_run_tags
+  include_tasks:
+    file: migrate.yml
+    apply:
+      tags:
+        - app
+        - app.migrate
+  tags:
+    - app
+    - app.migrate

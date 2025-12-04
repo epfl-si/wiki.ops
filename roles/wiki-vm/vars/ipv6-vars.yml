@@ -1,0 +1,11 @@
+ipv6_interface_name: ens33
+ipv6_address: >-
+  {{ lookup("community.dns.lookup", inventory_hostname, type="AAAA") }}
+
+# https://inside.epfl.ch/portal-xaas/network-configuration/
+ipv6_netmask: 100
+# Obtained by email (the “information” regarding that in the aforementioned
+# URL being flat out wrong):
+ipv6_gateway: >-
+  {{ "2001:620:618:45f:7:0a5f:5001:1" if inventory_deployment_stage == "production"
+  else "2001:620:618:45f:7:0a5f:6001:1" }}
