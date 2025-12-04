@@ -26,6 +26,7 @@ ensure_suitcase () {
         curl https://raw.githubusercontent.com/epfl-si/ansible.suitcase/master/install.sh | \
             SUITCASE_DIR="$(ansible_suitcase_dir)" \
             SUITCASE_ANSIBLE_VERSION=13.0.0 \
+            SUITCASE_PIP_EXTRA="dnspython" \
             SUITCASE_ANSIBLE_REQUIREMENTS=requirements.yml \
             SUITCASE_WITH_EYAML=0 \
             bash -x
