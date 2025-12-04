@@ -27,3 +27,13 @@
   tags:
     - vm
     - vm.centos
+
+- include_tasks:
+    file: ipv6.yml
+    apply:
+      tags:
+        - vm
+        - vm.ipv6
+  tags:
+    - vm
+    - vm.ipv6

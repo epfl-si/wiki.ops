@@ -1,0 +1,45 @@
+- tags: always
+  include_vars: ipv6-vars.yml
+
+# Unbridle IPv6 on XaaS VMs
+- name: Delete ITOP-SDDC's /etc/sysctl.d/ipv6.conf
+  ansible.builtin.file:
+    path: /etc/sysctl.d/ipv6.conf
+    state: absent
+
+- name: Obtain kernel command line
+  changed_when: false
+  ansible.builtin.shell:
+    cmd: cat /proc/cmdline
+  register: _kernel_command_line
+
+- when: >-
+    "ipv6.disable" in _kernel_command_line.stdout
+  block:
+    # https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/10/html/managing_monitoring_and_updating_the_kernel/configuring-kernel-command-line-parameters
+    - name: Regenerate bootloader (grub) config
+      ansible.builtin.shell: grubby --update-kernel=ALL --remove-args=ipv6.disable=1
+    - ansible.builtin.reboot:
+
+- name: IPv6 configuration
+  register: _ipv6_configuration
+  with_items:
+    # https://networkmanager.dev/docs/api/latest/nm-settings-keyfile.html
+    - name: method
+      value: manual
+    - name: address1
+      value: >-
+        {{ ipv6_address }}/{{ ipv6_netmask }};{{ ipv6_gateway }}
+  community.general.ini_file:
+    path: /etc/NetworkManager/system-connections/{{ ipv6_interface_name }}.nmconnection
+    section: ipv6
+    option: "{{ item.name }}"
+    value: "{{ item.value }}"
+
+- name: Restart networking
+  when: >-
+    ( _ipv6_configuration | default({}) ) is changed
+  ansible.builtin.shell:
+    cmd: |
+      nmcli connection reload
+      nmcli connection up {{ ipv6_interface_name }}
