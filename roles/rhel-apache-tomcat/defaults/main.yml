@@ -1,5 +1,5 @@
-nginx_tomcat_tls_prefix: /etc/nginx/tls/tomcat
-nginx_tomcat_dn_o: EPFL
+apache_tomcat_tls_prefix: /etc/pki/tls/certs/wiki
+apache_tomcat_dn_o: EPFL
 tomcat_version: 10.1.49
 tomcat_archive_url: https://archive.apache.org/dist/tomcat/tomcat-{{ tomcat_version.split('.')[0] }}/v{{ tomcat_version }}/bin/apache-tomcat-{{ tomcat_version }}.tar.gz
 tomcat_install_dir: /usr/local/share/tomcat

@@ -1,0 +1,49 @@
+- name: python3-cryptography
+  dnf:
+    name: python3-cryptography
+
+- name: apache
+  dnf:
+    name:
+      - httpd
+      - mod_ssl
+      - mod_auth_openidc
+  register: _apache_packages
+
+- name: "{{ _apache_conf_filename }}"
+  vars:
+    _apache_conf_filename: /etc/httpd/conf.d/wiki.conf
+  copy:
+    dest: "{{ _apache_conf_filename }}"
+    content: |
+      <VirtualHost *:443>
+          ServerName {{ inventory_web_hostname }}
+
+          # TLS configuration
+          SSLEngine on
+          SSLCertificateFile /etc/pki/tls/certs/localhost.crt
+          SSLCertificateKeyFile /etc/pki/tls/private/localhost.key
+
+          SSLProtocol             all -SSLv3 -TLSv1 -TLSv1.1
+          SSLCipherSuite          HIGH:!aNULL:!MD5
+          SSLHonorCipherOrder     on
+
+          ProxyPreserveHost On
+          ProxyPass        "/"  "http://127.0.0.1:8080/"
+          ProxyPassReverse "/"  "http://127.0.0.1:8080/"
+      </VirtualHost>
+  register: _apache_conf
+
+- name: systemd service
+  ansible.builtin.systemd_service:
+    name: httpd
+    enabled: true
+    state: >-
+      {{ "restarted" if _any_changed else "started" }}
+  vars:
+    _any_changed: >-
+      {{
+      ( ( _apache_packages | default({}) ) is changed )
+      or
+      ( ( _apache_conf | default({}) ) is changed )
+      }}

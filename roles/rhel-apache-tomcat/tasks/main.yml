@@ -5,7 +5,7 @@
   tags: [ tomcat ]
 
 - include_tasks:
-    file: nginx.yml
+    file: apache.yml
     apply:
-      tags: [ nginx ]
-  tags: [ nginx ]
+      tags: [ apache ]
+  tags: [ apache ]
