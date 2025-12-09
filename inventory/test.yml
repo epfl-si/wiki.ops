@@ -2,7 +2,7 @@ vms:
   hosts:
     # https://portal-xaas-its.epfl.ch/automation/#/service/catalog/deployment/d4d2751f-85fa-424f-ab50-f4188433de68
     itsblgwk0004.xaas.epfl.ch:
-      inventory_web_hostname: wiki.epfl.ch
+      inventory_web_hostname: wiki-test.epfl.ch
       inventory_deployment_stage: test
       ansible_python_interpreter: /usr/bin/python3.12
       ansible_user: root
