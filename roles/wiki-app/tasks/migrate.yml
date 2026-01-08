@@ -1,0 +1,5 @@
+- name: Perform backup
+  run_once: true
+  delegate_to: www10
+  ansible.builtin.raw: /usr/local/bin/mysql-backup.sh day
+  tags: app.migrate.legacy-backup

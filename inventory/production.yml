@@ -6,3 +6,9 @@ vms:
       inventory_deployment_stage: production
       ansible_python_interpreter: /usr/bin/python3.12
       ansible_user: root
+legacy:
+  hosts:
+    www10:
+      # ⚠ Access requires VPN
+      ansible_host: www10.epfl.ch
+      ansible_user: root
