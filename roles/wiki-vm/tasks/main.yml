@@ -37,3 +37,13 @@
   tags:
     - vm
     - vm.ipv6
+
+- include_tasks:
+    file: s3.yml
+    apply:
+      tags:
+        - vm
+        - vm.s3
+  tags:
+    - vm
+    - vm.s3

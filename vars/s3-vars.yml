@@ -1,0 +1,6 @@
+_s3_secrets_backups: >-
+  {{ lookup("pipe", "keybase fs read /keybase/team/epfl_wiki/secrets/s3-backups.yml")
+  | from_yaml }}
+
+s3_backups: >-
+  {{ _s3_secrets_backups.s3_backups }}

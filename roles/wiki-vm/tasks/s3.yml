@@ -1,0 +1,28 @@
+- tags: always
+  include_vars: s3-vars.yml
+
+- name: "`aws` CLI"
+  ansible.builtin.dnf:
+    name:
+      - awscli2
+
+- name: AWS configuration directory
+  ansible.builtin.file:
+    state: directory
+    path: /root/.aws
+
+- name: AWS config
+  ansible.builtin.copy:
+    dest: /root/.aws/config
+    content: |
+      [default]
+      region = eu-central-1
+
+- name: AWS credentials
+  ansible.builtin.copy:
+    dest: /root/.aws/credentials
+    content: |
+      [default]
+      endpoint_url = https://s3.epfl.ch
+      aws_access_key_id = {{ s3_backups.rw.access_key }}
+      aws_secret_access_key = {{ s3_backups.rw.access_secret }}
