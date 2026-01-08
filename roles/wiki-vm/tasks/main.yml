@@ -47,3 +47,13 @@
   tags:
     - vm
     - vm.s3
+
+- include_tasks:
+    file: mariadb.yml
+    apply:
+      tags:
+        - vm
+        - vm.mariadb
+  tags:
+    - vm
+    - vm.mariadb

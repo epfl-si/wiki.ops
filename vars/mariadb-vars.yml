@@ -1,0 +1,6 @@
+_mariadb_keybase: >-
+  {{ lookup("pipe", "keybase fs read /keybase/team/epfl_wiki/mariadb.yml")
+  | from_yaml }}
+
+mariadb_credentials: >-
+  {{ _mariadb_keybase.mariadb[inventory_deployment_stage] }}

@@ -1,0 +1,18 @@
+- tags: always
+  include_vars: mariadb-vars.yml
+
+- name: "`mariadb` RPM"
+  ansible.builtin.dnf:
+    name: mariadb
+
+- name: MariaDB credentials
+  when: mariadb_credentials is defined
+  ansible.builtin.copy:
+    dest: /root/.my.cnf
+    content: |
+      [client-mariadb]
+      host={{     mariadb_credentials.host     }}
+      port={{     mariadb_credentials.port     }}
+      user={{     mariadb_credentials.user     }}
+      password={{ mariadb_credentials.password }}
+      database={{ mariadb_credentials.database }}
