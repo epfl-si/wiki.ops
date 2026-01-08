@@ -34,3 +34,4 @@
     - app
     - app.migrate
     - app.migrate.legacy-backup
+    - app.migrate.restore

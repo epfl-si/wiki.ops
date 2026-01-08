@@ -4,3 +4,13 @@ _s3_secrets_backups: >-
 
 s3_backups: >-
   {{ _s3_secrets_backups.s3_backups }}
+
+s3_mysql_backup_path: >-
+  s3://{{ s3_backups.bucket }}/kissrv121/{{ s3_mysql_backup_basename }}
+
+s3_mysql_backup_basename: >-
+  mysql-{{
+     ("%d" | strftime(_date))
+     if _date is defined
+     else "%d" | strftime
+   }}.sql.gz
