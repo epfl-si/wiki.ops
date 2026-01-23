@@ -1,0 +1,288 @@
+################################################################################
+# polywiki global configuration file
+# Managed by Ansible - do not edit manually
+################################################################################
+
+################################################################################
+# Host specific parameters
+################################################################################
+
+# The webapp context path, leave blank if default (root)
+site.contextPath =
+
+# The site hostname
+site.hostname = {{ polywiki_site_hostname }}
+
+# The base url for the help, the locale (e.g. "en") it appended to it
+site.help.baseUrl = https://{{ polywiki_site_hostname }}/help-
+
+site.css = https://{{ polywiki_site_hostname }}/static//css/epfl.css
+
+# The system path where the application can store temporary files (mandatory)
+system.temp.path = /tmp
+
+################################################################################
+# Google Search Appliance
+################################################################################
+
+# The Google Search Appliance host
+googleBox.host = google.epfl.ch
+
+################################################################################
+# FileService
+################################################################################
+
+# The class implementing IFileService
+fileService.class = ch.epfl.kis.polywiki.service.LocalFileService
+
+# The encoding used by the FileService for file names
+fileService.encoding = UTF-8
+
+# The server credentials
+fileService.server   = {{ vault_fileservice_server }}
+fileService.host     = {{ vault_fileservice_host }}
+fileService.username = {{ vault_fileservice_username }}
+fileService.password = {{ vault_fileservice_password }}
+
+# The root path where the files are stored on the server
+fileService.rootPath = {{ polywiki_fileservice_root_path }}
+
+################################################################################
+# User Service Providers
+################################################################################
+
+userService.provider.1 = ldap
+userService.provider.2 = ldapGroup
+
+userService.provider.ldap.class = ch.epfl.kis.polywiki.service.LdapUserService
+userService.provider.ldapGroup.class = ch.epfl.kis.polywiki.service.LdapGroupService
+
+################################################################################
+# LDAP config
+################################################################################
+
+# The configuration for the LDAP provider
+ldap.host = scoldap.epfl.ch
+ldap.port = 389
+ldap.version = 3
+
+# LDAP creditentials, leave blank if anonymous
+ldap.username =
+ldap.password =
+
+# The organizations used in the LDAP server. The order is took into account.
+# Put no spaces between the commas.
+ldap.organizations.1 = ou=users,o=epfl,c=ch
+ldap.organizations.2 = ou=guests,o=epfl,c=ch
+ldap.organizations.3 = ou=services,o=epfl,c=ch
+
+# The LDAP attribute used as the Principal name.
+ldap.principalNameAttribute = uniqueIdentifier
+
+# The LDAP attributes that can be used to identify a user.
+# The order is took into account.
+ldap.userUniqueAttribute.1 = uid
+ldap.userUniqueAttribute.2 = mail
+ldap.userUniqueAttribute.3 = uniqueIdentifier
+
+################################################################################
+# LaTeX
+################################################################################
+
+# The delimiter for LaTeX expressions
+latex.delimiter = $latex
+
+# The URL of the script rendering LaTeX expressions
+latex.script.url = https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML
+
+################################################################################
+# Mail
+################################################################################
+
+# The host used to send emails (notifications, etc.)
+mail.smtp.host = mail.epfl.ch
+
+# The email account used to send emails
+mail.account.info.email = noreply@epfl.ch
+mail.account.info.name = polywiki
+
+# The email account used by the support
+mail.account.support.email = webmaster@epfl.ch
+
+mail.account.test.email = {{ vault_test_email | default('webmaster@epfl.ch') }}
+
+################################################################################
+# Templates & theme
+################################################################################
+
+# The templates
+template.default.id = 2
+
+# standard
+template.1.path = /WEB-INF/jsp/layout/standard/wiki.jsp
+template.1.css.main = https://{{ polywiki_site_hostname }}/static/css/default.css
+template.1.css.editor = https://{{ polywiki_site_hostname }}/static/css/default.css
+template.1.css.allowCustom = true
+template.1.hasThemes = false
+
+# web2010
+template.2.path = /WEB-INF/jsp/layout/web2010/2columns.jsp
+template.2.css.main = https://www.epfl.ch/css/epfl.css
+template.2.css.editor = /static/css/editor-web2010.css
+template.2.css.allowCustom = false
+template.2.hasThemes = true
+
+# The theme CSS. #5 has nothing because it is the default
+theme.default.id = 5
+
+theme.1.css = https://www.epfl.ch/css/associations.css
+theme.2.css = https://www.epfl.ch/css/cdh.css
+theme.3.css = https://www.epfl.ch/css/cdm.css
+theme.4.css = https://www.epfl.ch/css/enac.css
+theme.5.css =
+theme.6.css = https://www.epfl.ch/css/ic.css
+theme.7.css = https://www.epfl.ch/css/inter.css
+theme.8.css = https://www.epfl.ch/css/sb.css
+theme.9.css = https://www.epfl.ch/css/sti.css
+theme.10.css = https://www.epfl.ch/css/sv.css
+
+################################################################################
+# Page Archive
+################################################################################
+
+pageArchive.allowed.1 = 127.0.0.1
+
+################################################################################
+# Misc
+################################################################################
+
+# The regular expression of a valid page name
+page.name.regexp = [a-z0-9\\.\\-/]*
+
+################################################################################
+# Test users
+################################################################################
+
+# valid users ids
+test.user.valid.1.id = 133134
+test.user.valid.1.username = kermit
+test.user.valid.1.password = {{ vault_test_user_password | default('dev') }}
+test.user.valid.1.email = kermit.lagrenouille@epfl.ch
+test.user.valid.1.firstName = Kermit
+test.user.valid.1.lastName = La Grenouille
+test.user.valid.2.id = 109751
+test.user.valid.2.username = dennaoui
+test.user.valid.3.id = 164486
+test.user.valid.3.username = mellier
+
+test.guest.valid.1.id = guest
+test.guest.valid.1.username = guest
+test.guest.valid.1.password = {{ vault_test_guest_password | default('guest') }}
+
+test.group.valid.1.uniqueIdentifier = U13030
+test.group.valid.1.name = IDEVELOP-unit
+test.group.valid.1.description = SI - Développement
+test.group.valid.1.dn = cn=IDEVELOP-unit,ou=groups,o=epfl,c=ch
+test.group.valid.1.member.1 = 133134
+
+test.group.valid.2.uniqueIdentifier = U12635
+test.group.valid.2.name = SI-unit
+test.group.valid.2.description =  Systèmes d'information
+test.group.valid.2.dn = cn=SI-unit,ou=groups,o=epfl,c=ch
+test.group.valid.2.member.1 = 133134
+
+################################################################################
+# Appilis
+################################################################################
+
+# site encoding
+appilis.site.encoding = ISO-8859-1
+
+# The reference locale which is always up-to-date, from which
+# the others locales are translated.
+appilis.locale.reference = en
+
+# the default time zone
+appilis.timeZone = Europe/Zurich
+
+# default mail server
+appilis.mail.smtp.host = mail.epfl.ch
+
+# support for mobile clients
+appilis.site.supportMobile = false
+
+# static path
+appilis.staticPath = /static
+
+# factories implementations
+appilis.factory.datastore =  com.appilis.core.datastore.impl.hibernate.HibernateDatastoreService
+appilis.factory.cache = com.appilis.core.cache.impl.ehcache.EhCacheService
+appilis.factory.roleService = com.appilis.core.role.impl.datastore.DatastoreRoleService
+appilis.factory.mail = com.appilis.core.mail.impl.JavamailService
+
+# initializer class
+appilis.applicationInitializer = ch.epfl.kis.polywiki.system.Init
+
+
+################################################################################
+# OpenID Connect / Entra ID (Azure AD)
+################################################################################
+
+# Microsoft Entra ID base URL
+entraid.baseUrl = {{ vault_entraid_base_url }}
+
+# Microsoft Entra ID tenant ID
+entraid.tenantId = {{ vault_entraid_tenant_id }}
+
+# Application (client) ID registered in Entra ID
+entraid.clientId = {{ vault_entraid_client_id }}
+
+# Application client secret
+entraid.clientSecret = {{ vault_entraid_client_secret }}
+
+# Redirect URI (must match the one configured in Entra ID app registration)
+entraid.redirectUri = {{ vault_entraid_redirect_uri }}
+
+# Callback path handled by the filter (relative to context path)
+entraid.callbackPath = /auth/oidc/callback
+
+# OAuth 2.0 scopes (space-separated)
+entraid.scopes = openid profile email
+
+# Claim name to extract unique user identifier (for LDAP lookup)
+entraid.claim.uniqueId = uniqueid
+
+# Claim name to extract username
+entraid.claim.username = gaspar
+
+################################################################################
+# edu-ID / Switch (Guest users)
+################################################################################
+
+# Application (client) ID registered with edu-ID
+eduid.clientId = {{ vault_eduid_client_id }}
+
+# Application client secret
+eduid.clientSecret = {{ vault_eduid_client_secret }}
+
+# Redirect URI (must match the one configured in edu-ID app registration)
+eduid.redirectUri = {{ vault_eduid_redirect_uri }}
+
+# Callback path handled by the filter (relative to context path)
+eduid.callbackPath = /auth/eduid/callback
+
+# OAuth 2.0 scopes (space-separated)
+eduid.scopes = openid profile email
+
+# edu-ID issuer
+eduid.issuer = {{ vault_eduid_issuer }}
+
+# edu-ID authorization endpoint
+eduid.authorizationEndpoint = {{ vault_eduid_authorization_endpoint }}
+
+# edu-ID token endpoint
+eduid.tokenEndpoint = {{ vault_eduid_token_endpoint }}
+
+# edu-ID JWKS URI
+eduid.jwksUri = {{ vault_eduid_jwks_uri }}
+

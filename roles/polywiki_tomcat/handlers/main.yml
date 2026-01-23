@@ -1,0 +1,14 @@
+---
+# =============================================================================
+# Handlers pour le rôle polywiki_tomcat
+# =============================================================================
+
+- name: reload systemd daemon
+  ansible.builtin.systemd:
+    daemon_reload: true
+
+- name: restart tomcat
+  ansible.builtin.systemd:
+    name: "{{ polywiki_tomcat_service_name }}"
+    state: restarted
+
