@@ -1,0 +1,254 @@
+---
+# =============================================================================
+# Rôle polywiki_app - Déploiement de l'application polywiki
+# =============================================================================
+
+- name: Set release directory name
+  ansible.builtin.set_fact:
+    polywiki_release_dir: "{{ polywiki_private_dir }}/polywiki-{{ polywiki_version | default(ansible_date_time.date) }}"
+
+- name: Vérifier que le WAR existe localement
+  ansible.builtin.stat:
+    path: "{{ polywiki_war_local_path }}"
+  delegate_to: localhost
+  become: false
+  register: war_file_stat
+
+- name: Échouer si le WAR n'existe pas
+  ansible.builtin.fail:
+    msg: |
+      Le fichier WAR n'existe pas: {{ polywiki_war_local_path }}
+      Buildez le projet avant de lancer le déploiement: make war
+  when: not war_file_stat.stat.exists
+
+# =============================================================================
+# Préparation des répertoires
+# =============================================================================
+
+- name: Ensure private directory exists
+  ansible.builtin.file:
+    path: "{{ polywiki_private_dir }}"
+    state: directory
+    owner: "{{ polywiki_tomcat_owner }}"
+    group: "{{ polywiki_tomcat_group }}"
+    mode: "0755"
+
+- name: Ensure archive directory exists
+  ansible.builtin.file:
+    path: "{{ polywiki_archive_dir }}"
+    state: directory
+    owner: "{{ polywiki_tomcat_owner }}"
+    group: "{{ polywiki_tomcat_group }}"
+    mode: "0755"
+
+- name: Ensure logs directory exists
+  ansible.builtin.file:
+    path: "{{ polywiki_logs_dir }}"
+    state: directory
+    owner: "{{ polywiki_tomcat_owner }}"
+    group: "{{ polywiki_tomcat_group }}"
+    mode: "0755"
+
+# =============================================================================
+# Détection de l'ancienne release (avant tout changement)
+# =============================================================================
+
+- name: Check current ROOT symlink
+  ansible.builtin.stat:
+    path: "{{ polywiki_webapps_root }}"
+  register: root_symlink_stat
+
+- name: Get current release path
+  ansible.builtin.set_fact:
+    polywiki_previous_release: "{{ root_symlink_stat.stat.lnk_source }}"
+  when:
+    - root_symlink_stat.stat.exists | default(false)
+    - root_symlink_stat.stat.islnk | default(false)
+
+- name: Initialize previous release if not set
+  ansible.builtin.set_fact:
+    polywiki_previous_release: ""
+  when: polywiki_previous_release is not defined
+
+# =============================================================================
+# Gestion du répertoire de release
+# =============================================================================
+
+- name: Check if release directory already exists
+  ansible.builtin.stat:
+    path: "{{ polywiki_release_dir }}"
+  register: release_dir_stat
+
+- name: Handle existing release directory
+  when: release_dir_stat.stat.exists
+  block:
+    - name: Fail if release exists and force_update is false
+      ansible.builtin.fail:
+        msg: "Le répertoire {{ polywiki_release_dir }} existe déjà. Utilisez -e polywiki_force_update=true pour forcer."
+      when: not (polywiki_force_update | default(false) | bool)
+
+    - name: Backup existing release directory
+      ansible.builtin.command:
+        cmd: "mv {{ polywiki_release_dir }} {{ polywiki_archive_dir }}/{{ polywiki_release_dir | basename }}_{{ ansible_date_time.epoch }}.bkp"
+      when: polywiki_force_update | default(false) | bool
+
+- name: Create release directory
+  ansible.builtin.file:
+    path: "{{ polywiki_release_dir }}"
+    state: directory
+    owner: "{{ polywiki_tomcat_owner }}"
+    group: "{{ polywiki_tomcat_group }}"
+    mode: "0755"
+
+# =============================================================================
+# Déploiement du WAR
+# =============================================================================
+
+- name: Extract WAR to release directory
+  ansible.builtin.unarchive:
+    src: "{{ polywiki_war_local_path }}"
+    dest: "{{ polywiki_release_dir }}"
+    owner: "{{ polywiki_tomcat_owner }}"
+    group: "{{ polywiki_tomcat_group }}"
+    mode: "0755"
+
+- name: Set permissions recursively
+  ansible.builtin.file:
+    path: "{{ polywiki_release_dir }}"
+    state: directory
+    recurse: true
+    owner: "{{ polywiki_tomcat_owner }}"
+    group: "{{ polywiki_tomcat_group }}"
+    mode: "u=rwX,g=rX,o=rX"
+
+# =============================================================================
+# Injection des secrets dans les fichiers de configuration
+# (Les fichiers sont dans le WAR extrait, on les écrase avec nos templates)
+# =============================================================================
+
+- name: Ensure WEB-INF/classes directory exists
+  ansible.builtin.file:
+    path: "{{ polywiki_release_dir }}/WEB-INF/classes"
+    state: directory
+    owner: "{{ polywiki_tomcat_owner }}"
+    group: "{{ polywiki_tomcat_group }}"
+    mode: "0755"
+
+- name: Inject secrets into hibernate.cfg.xml
+  ansible.builtin.template:
+    src: hibernate.cfg.xml.j2
+    dest: "{{ polywiki_release_dir }}/WEB-INF/classes/hibernate.cfg.xml"
+    owner: "{{ polywiki_tomcat_owner }}"
+    group: "{{ polywiki_tomcat_group }}"
+    mode: "0640"
+
+- name: Inject secrets into appilis.application.properties
+  ansible.builtin.template:
+    src: appilis.application.properties.j2
+    dest: "{{ polywiki_release_dir }}/WEB-INF/classes/appilis.application.properties"
+    owner: "{{ polywiki_tomcat_owner }}"
+    group: "{{ polywiki_tomcat_group }}"
+    mode: "0640"
+
+# =============================================================================
+# Création du context.xml (si absent)
+# =============================================================================
+
+- name: Ensure META-INF directory exists
+  ansible.builtin.file:
+    path: "{{ polywiki_release_dir }}/META-INF"
+    state: directory
+    owner: "{{ polywiki_tomcat_owner }}"
+    group: "{{ polywiki_tomcat_group }}"
+    mode: "0755"
+
+- name: Create or update context.xml
+  ansible.builtin.copy:
+    content: '<Context path="" antiResourceLocking="false" />'
+    dest: "{{ polywiki_release_dir }}/META-INF/context.xml"
+    owner: "{{ polywiki_tomcat_owner }}"
+    group: "{{ polywiki_tomcat_group }}"
+    mode: "0644"
+    force: true
+
+# =============================================================================
+# Archivage de l'ancienne release (AVANT de supprimer le symlink)
+# =============================================================================
+
+- name: Archive previous release
+  when:
+    - polywiki_previous_release | default('') | length > 0
+    - polywiki_previous_release != polywiki_release_dir
+  block:
+    - name: Check if previous release still exists
+      ansible.builtin.stat:
+        path: "{{ polywiki_previous_release }}"
+      register: prev_release_stat
+
+    - name: Move previous release to archive
+      ansible.builtin.command:
+        cmd: "mv {{ polywiki_previous_release }} {{ polywiki_archive_dir }}/{{ polywiki_previous_release | basename }}_{{ ansible_date_time.epoch }}"
+      when: prev_release_stat.stat.exists | default(false)
+
+# =============================================================================
+# Switch atomique du symlink ROOT
+# =============================================================================
+
+- name: Remove existing ROOT (symlink or directory)
+  ansible.builtin.file:
+    path: "{{ polywiki_webapps_root }}"
+    state: absent
+
+- name: Create ROOT symlink to new release
+  ansible.builtin.file:
+    src: "{{ polywiki_release_dir }}"
+    dest: "{{ polywiki_webapps_root }}"
+    state: link
+    owner: "{{ polywiki_tomcat_owner }}"
+    group: "{{ polywiki_tomcat_group }}"
+  register: symlink_update
+
+# =============================================================================
+# Nettoyage des anciennes archives (garde les N dernières)
+# =============================================================================
+
+- name: List archived releases
+  ansible.builtin.find:
+    paths: "{{ polywiki_archive_dir }}"
+    file_type: directory
+    patterns: "polywiki-*"
+  register: archived_releases
+
+- name: Remove old archives (keep last {{ polywiki_archive_keep_count }})
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: absent
+  loop: "{{ (archived_releases.files | sort(attribute='mtime') | reverse | list)[polywiki_archive_keep_count:] }}"
+  when: archived_releases.files | length > polywiki_archive_keep_count
+
+# =============================================================================
+# Nettoyage et redémarrage Tomcat
+# =============================================================================
+
+- name: Clean Tomcat work directory
+  ansible.builtin.file:
+    path: "{{ polywiki_work_dir }}"
+    state: absent
+
+- name: Restart Tomcat
+  ansible.builtin.systemd:
+    name: "{{ polywiki_tomcat_service_name }}"
+    state: restarted
+    daemon_reload: true
+
+# =============================================================================
+# Logrotate configuration
+# =============================================================================
+
+- name: Deploy logrotate configuration
+  ansible.builtin.template:
+    src: logrotate-polywiki.j2
+    dest: /etc/logrotate.d/polywiki
+    owner: root
+    group: root
+    mode: "0644"

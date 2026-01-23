@@ -1,0 +1,95 @@
+---
+# =============================================================================
+# Rôle polywiki_users - Création des utilisateurs et groupes
+# =============================================================================
+
+- name: Create tomcat-admin group
+  ansible.builtin.group:
+    name: "{{ polywiki_tomcat_group }}"
+    state: present
+
+- name: Create kis user
+  ansible.builtin.user:
+    name: "{{ polywiki_tomcat_owner }}"
+    group: "{{ polywiki_tomcat_group }}"
+    shell: /bin/bash
+    home: "/home/{{ polywiki_tomcat_owner }}"
+    create_home: true
+    state: present
+
+- name: Set up SSH authorized keys for kis user
+  ansible.posix.authorized_key:
+    user: "{{ polywiki_tomcat_owner }}"
+    state: present
+    key: "{{ item }}"
+  loop: "{{ polywiki_ssh_authorized_keys | default([]) }}"
+  when: polywiki_ssh_authorized_keys is defined and polywiki_ssh_authorized_keys | length > 0
+
+- name: Build sudoers content for tomcat-wiki service
+  ansible.builtin.set_fact:
+    sudoers_tomcat: |
+      # Allow kis to manage tomcat-wiki service
+      {{ polywiki_tomcat_owner }} ALL=(ALL) NOPASSWD: /bin/systemctl start {{ polywiki_tomcat_service_name }}
+      {{ polywiki_tomcat_owner }} ALL=(ALL) NOPASSWD: /bin/systemctl stop {{ polywiki_tomcat_service_name }}
+      {{ polywiki_tomcat_owner }} ALL=(ALL) NOPASSWD: /bin/systemctl restart {{ polywiki_tomcat_service_name }}
+      {{ polywiki_tomcat_owner }} ALL=(ALL) NOPASSWD: /bin/systemctl reload {{ polywiki_tomcat_service_name }}
+      {{ polywiki_tomcat_owner }} ALL=(ALL) NOPASSWD: /bin/systemctl status {{ polywiki_tomcat_service_name }}
+
+- name: Build sudoers content for Apache service
+  ansible.builtin.set_fact:
+    sudoers_apache: |
+      # Allow kis to manage httpd service
+      {{ polywiki_tomcat_owner }} ALL=(ALL) NOPASSWD: /bin/systemctl start {{ polywiki_apache_service_name }}
+      {{ polywiki_tomcat_owner }} ALL=(ALL) NOPASSWD: /bin/systemctl stop {{ polywiki_apache_service_name }}
+      {{ polywiki_tomcat_owner }} ALL=(ALL) NOPASSWD: /bin/systemctl restart {{ polywiki_apache_service_name }}
+      {{ polywiki_tomcat_owner }} ALL=(ALL) NOPASSWD: /bin/systemctl reload {{ polywiki_apache_service_name }}
+      {{ polywiki_tomcat_owner }} ALL=(ALL) NOPASSWD: /bin/systemctl status {{ polywiki_apache_service_name }}
+  when: polywiki_apache_service_name is defined
+
+- name: Set default empty Apache sudoers if not defined
+  ansible.builtin.set_fact:
+    sudoers_apache: ""
+  when: polywiki_apache_service_name is not defined
+
+- name: Allow kis user to sudo for services
+  ansible.builtin.copy:
+    content: "{{ sudoers_tomcat }}{{ sudoers_apache }}"
+    dest: /etc/sudoers.d/{{ polywiki_tomcat_owner }}
+    owner: root
+    group: root
+    mode: "0440"
+    validate: /usr/sbin/visudo -cf %s
+
+- name: Ensure Tomcat base directory exists
+  ansible.builtin.file:
+    path: "{{ polywiki_tomcat_base_dir }}"
+    state: directory
+    owner: "{{ polywiki_tomcat_owner }}"
+    group: "{{ polywiki_tomcat_group }}"
+    mode: "0755"
+
+- name: Ensure Tomcat subdirectories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ polywiki_tomcat_owner }}"
+    group: "{{ polywiki_tomcat_group }}"
+    mode: "0755"
+  loop:
+    - "{{ polywiki_tomcat_base_dir }}/conf"
+    - "{{ polywiki_tomcat_base_dir }}/logs"
+    - "{{ polywiki_tomcat_base_dir }}/webapps"
+    - "{{ polywiki_tomcat_base_dir }}/work"
+    - "{{ polywiki_tomcat_base_dir }}/private"
+
+- name: Ensure Apache vhost directories exist
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ polywiki_tomcat_owner }}"
+    group: "{{ polywiki_tomcat_group }}"
+    mode: "0755"
+  loop:
+    - "{{ polywiki_apache_vhost_log_dir }}"
+    - "{{ polywiki_apache_document_root }}"
+  when: polywiki_apache_vhost_log_dir is defined and polywiki_apache_document_root is defined

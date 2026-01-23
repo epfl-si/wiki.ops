@@ -1,3 +1,37 @@
+# =============================================================================
+# Playbook de déploiement polywiki
+# =============================================================================
+#
+# Usage:
+#   # Déploiement complet sur la production
+#   wikisible
+#
+#   # Déploiement avec mise à jour forcée
+#   wikisible -e "polywiki_force_update=true"
+#
+#   # Déploiement avec une version spécifique
+#   wikisible -e "polywiki_version=2024-01-15"
+#
+#   # Dry-run (check mode)
+#   wikisible --check
+#
+#   # Deployer uniquement l'application (sans Tomcat ni Apache config)
+#   wikisible --tags app
+#
+#   # Deployer uniquement la config Tomcat
+#   wikisible --tags tomcat
+#
+#   # Deployer uniquement la config Apache
+#   wikisible --tags apache
+#
+#   # Déploiement sans Apache (pour test)
+#   wikisible --skip-tags apache
+#
+#   # Déploiement uniquement setup + Tomcat + App (sans Apache)
+#   wikisible --tags users,tomcat,app
+#
+# =============================================================================
+
 - hosts: vms
   gather_facts: no
   roles:
@@ -16,3 +50,80 @@
   gather_facts: no
   roles:
     - roles/wiki-app
+
+- name: Déployer polywiki
+  hosts: polywiki_prod
+  become: true
+  gather_facts: true
+
+  vars_files:
+    - group_vars/all.yml
+    - group_vars/vault.yml
+
+  pre_tasks:
+    - name: Afficher les informations de déploiement
+      ansible.builtin.debug:
+        msg: |
+          === Déploiement polywiki ===
+          Hôte cible: {{ inventory_hostname }}
+          Version: {{ polywiki_version | default(ansible_date_time.date) }}
+          WAR source: {{ polywiki_war_local_path }}
+          Répertoire cible: {{ polywiki_private_dir }}/polywiki-{{ polywiki_version | default(ansible_date_time.date) }}
+          Force update: {{ polywiki_force_update }}
+          Archives conservées: {{ polywiki_archive_keep_count }}
+
+  roles:
+    # Création des utilisateurs et groupes (kis, tomcat-admin)
+    - role: polywiki_users
+      tags:
+        - users
+        - setup
+
+    # Configuration Tomcat (server.xml, web.xml, connecteurs)
+    - role: polywiki_tomcat
+      tags:
+        - tomcat
+        - config
+
+    # Déploiement de l'application (WAR, injection secrets, archivage)
+    - role: polywiki_app
+      tags:
+        - app
+        - deploy
+
+    # Configuration Apache (vhost, SSL, proxy)
+    - role: polywiki_apache
+      tags:
+        - apache
+        - webserver
+
+  post_tasks:
+    - name: Vérifier les services
+      ansible.builtin.service_facts:
+
+    - name: Afficher le statut de Tomcat
+      ansible.builtin.debug:
+        msg: "Tomcat ({{ polywiki_tomcat_service_name }}) est {{ ansible_facts.services[polywiki_tomcat_service_name + '.service'].state | default('inconnu') }}"
+      when: ansible_facts.services is defined
+
+    - name: Afficher le statut d'Apache
+      ansible.builtin.debug:
+        msg: "Apache ({{ polywiki_apache_service_name }}) est {{ ansible_facts.services[polywiki_apache_service_name + '.service'].state | default('inconnu') }}"
+      when:
+        - ansible_facts.services is defined
+        - polywiki_apache_service_name is defined
+
+    - name: Lister les releases archivées
+      ansible.builtin.find:
+        paths: "{{ polywiki_archive_dir }}"
+        file_type: directory
+      register: archived_releases
+
+    - name: Résumé du déploiement
+      ansible.builtin.debug:
+        msg: |
+          === Déploiement terminé ===
+          Application: {{ polywiki_private_dir }}/polywiki-{{ polywiki_version | default(ansible_date_time.date) }}
+          Symlink ROOT: {{ polywiki_webapps_root }}
+          Archives: {{ archived_releases.files | length }} release(s) archivée(s)
+          URL: https://{{ polywiki_apache_server_name }}/

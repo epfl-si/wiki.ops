@@ -1,0 +1,61 @@
+# Managed by Ansible - do not edit manually
+################################################################################
+# polywiki Proxy and Rewrite configuration
+################################################################################
+
+# Enable rewrite engine
+RewriteEngine On
+
+# Exclude Google verification file from proxy
+ProxyPass /googledb5897a77dc731da.html !
+
+# Normalize hostname - redirect all requests to canonical hostname
+RewriteCond %{HTTP_HOST}   !^{{ polywiki_apache_server_name | regex_escape() }}$ [NC]
+{% if polywiki_apache_enable_https | default(true) %}
+RewriteRule (.*) https://{{ polywiki_apache_server_name }}$1 [R=301,L]
+{% else %}
+RewriteRule (.*) http://{{ polywiki_apache_server_name }}$1 [R=301,L]
+{% endif %}
+
+# Rewrite for the documents
+# /wikiname/documents/path -> /public/documents/wikiname/path
+RewriteCond %{REQUEST_URI}  !^/public/documents.*
+RewriteRule ^/([a-z0-9\.\-]+)/documents/(.*)  http://localhost:{{ polywiki_tomcat_http_port }}/public/documents/$1/$2  [P,L]
+
+# Rewrite for the pages urls
+# /wikiname/pagename -> /public/page/view.go?wikiName=wikiname&pageName=pagename
+RewriteCond %{REQUEST_URI}  !^/$
+RewriteCond %{REQUEST_URI}  !^/(favicon.ico|googledb5897a77dc731da.html|noindex/|private/|public/|robots.txt|test.txt|rss/|static/).*
+RewriteCond %{REQUEST_URI}  !^/auth/.*
+RewriteRule ^/([a-z0-9\.\-]+)/?(.*)   http://localhost:{{ polywiki_tomcat_http_port }}/public/page/view.go?wikiName=$1&pageName=$2  [P,L]
+
+{% if polywiki_apache_root_redirect is defined and polywiki_apache_root_redirect != "" %}
+# Redirect root to a specific wiki/page
+RewriteRule ^/$ {{ polywiki_apache_root_redirect }} [R=302,L]
+{% endif %}
+
+################################################################################
+# Reverse proxy to Tomcat
+################################################################################
+
+# Preserve the original Host header
+ProxyPreserveHost On
+
+# Main proxy rules
+ProxyPass / http://localhost:{{ polywiki_tomcat_http_port }}/
+ProxyPassReverse / http://localhost:{{ polywiki_tomcat_http_port }}/
+# Forward protocol headers to Tomcat (required for OIDC redirect_uri)
+<Location />
+{% if polywiki_apache_enable_https | default(true) %}
+    # Apache gère HTTPS directement
+    RequestHeader set X-Forwarded-Proto "https"
+    RequestHeader set X-Forwarded-Port "443"
+{% else %}
+    # Load balancer fait le SSL termination - les requêtes arrivent en HTTP mais étaient HTTPS
+    # Le load balancer devrait déjà envoyer X-Forwarded-Proto: https, sinon on le définit
+    RequestHeader set X-Forwarded-Proto "https"
+    RequestHeader set X-Forwarded-Port "443"
+{% endif %}
+    RequestHeader set X-Forwarded-Host "{{ polywiki_apache_server_name }}"
+</Location>
+
