@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Managed by Ansible - do not edit manually -->
+<!DOCTYPE hibernate-configuration PUBLIC
+    "-//Hibernate/Hibernate Configuration DTD//EN"
+    "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
+
+<hibernate-configuration>
+
+  <session-factory>
+
+    <!-- database connection settings -->
+    <property name="connection.driver_class">com.mysql.cj.jdbc.Driver</property>
+    <property name="connection.url">jdbc:mysql://{{ vault_db_server }}/{{ vault_db_name }}?autoReconnect=true&amp;useSSL={{ vault_db_ssl }}&amp;serverTimezone=UTC</property>
+    <property name="connection.username">{{ vault_db_username }}</property>
+    <property name="connection.password">{{ vault_db_password }}</property>
+    <property name="connection.useSSL">{{ vault_db_ssl }}</property>
+
+    <!-- connection pool via c3p0 -->
+    <property name="c3p0.min_size">2</property>
+    <property name="c3p0.max_size">100</property>
+    <property name="c3p0.max_statements">0</property>
+    <property name="c3p0.acquire_increment">1</property>
+    <property name="c3p0.idle_test_period">100</property>
+    <property name="c3p0.timeout">100</property>
+    
+    <!-- Disable metadata retrieval to avoid MySQL 8.0 compatibility issues -->
+    <property name="hibernate.temp.use_jdbc_metadata_defaults">false</property>
+
+    <!-- cache -->
+    <property name="hibernate.cache.region.factory_class">org.hibernate.cache.ehcache.SingletonEhCacheRegionFactory</property>
+    <property name="hibernate.cache.use_second_level_cache">true</property>
+
+    <!-- SQL dialect -->
+    <property name="dialect">org.hibernate.dialect.MySQL5Dialect</property>
+
+    <!-- transaction -->
+    <property name="transaction.factory_class">org.hibernate.engine.transaction.internal.jdbc.JdbcTransactionFactory</property>
+
+    <!-- enable Hibernate's automatic session context management -->
+    <property name="current_session_context_class">thread</property>
+
+    <!-- echo all executed SQL to stdout -->
+    <property name="show_sql">false</property>
+
+    <!-- Mapping files -->
+    <mapping resource="./hibernate/comment.hbm.xml"/>
+    <mapping resource="./hibernate/deletedPage.hbm.xml"/>
+    <mapping resource="./hibernate/maskedWiki.hbm.xml"/>
+    <mapping resource="./hibernate/objectRole.hbm.xml"/>
+    <mapping resource="./hibernate/page.hbm.xml"/>
+    <mapping resource="./hibernate/pageArchive.hbm.xml"/>
+    <mapping resource="./hibernate/roleEntry.hbm.xml"/>
+    <mapping resource="./hibernate/subscription.hbm.xml"/>
+    <mapping resource="./hibernate/wiki.hbm.xml"/>
+
+  </session-factory>
+
+</hibernate-configuration>
+

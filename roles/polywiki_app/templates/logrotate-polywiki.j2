@@ -1,0 +1,27 @@
+# Logrotate configuration for polywiki
+# Managed by Ansible - do not edit manually
+
+{{ polywiki_logs_dir }}/*.log {
+    {{ polywiki_logrotate_frequency }}
+    rotate {{ polywiki_logrotate_rotate_count }}
+    missingok
+    notifempty
+    compress
+    delaycompress
+    copytruncate
+    dateext
+    dateformat -%Y%m%d
+}
+
+{{ polywiki_logs_dir }}/catalina.out {
+    {{ polywiki_logrotate_frequency }}
+    rotate {{ polywiki_logrotate_rotate_count }}
+    missingok
+    notifempty
+    compress
+    delaycompress
+    copytruncate
+    dateext
+    dateformat -%Y%m%d
+}
+

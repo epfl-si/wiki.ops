@@ -1,0 +1,6 @@
+[polywiki_prod]
+itsblgwk0004.xaas.epfl.ch
+
+[polywiki_prod:vars]
+ansible_user=root
+ansible_ssh_private_key_file=/Users/zakari.karahacane/.ssh/id_rsa_epfl

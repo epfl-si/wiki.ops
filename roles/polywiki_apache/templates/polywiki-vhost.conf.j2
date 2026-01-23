@@ -1,0 +1,100 @@
+# Managed by Ansible - do not edit manually
+################################################################################
+# polywiki VirtualHost configuration
+################################################################################
+
+# HTTP VirtualHost
+<VirtualHost *:80>
+    ServerName {{ polywiki_apache_server_name }}
+{% for alias in polywiki_apache_server_aliases %}
+    ServerAlias {{ alias }}
+{% endfor %}
+
+    # Logging
+    ErrorLog {{ polywiki_apache_vhost_log_dir }}/error.log
+    CustomLog {{ polywiki_apache_vhost_log_dir }}/access.log combined
+    LogLevel warn
+    ServerSignature Off
+
+{% if polywiki_apache_enable_https | default(true) %}
+    # Force HTTPS redirect
+    RewriteEngine On
+    RewriteCond %{HTTPS} off
+    RewriteRule ^/(.*)$ https://%{SERVER_NAME}/$1 [L,R=301]
+{% else %}
+    # HTTPS disabled - serve application directly on HTTP
+    # Document root (for static files if needed)
+    DocumentRoot "{{ polywiki_apache_document_root }}"
+
+    # Character encoding
+    AddDefaultCharset ISO-8859-1
+
+    # Include proxy and rewrite rules
+    Include {{ polywiki_apache_conf_dir }}/polywiki-proxy.conf
+{% endif %}
+</VirtualHost>
+
+{% if polywiki_apache_enable_https | default(true) %}
+# HTTPS - Main configuration
+<VirtualHost *:443>
+    ServerName {{ polywiki_apache_server_name }}
+{% for alias in polywiki_apache_server_aliases %}
+    ServerAlias {{ alias }}
+{% endfor %}
+
+    # Document root (for static files if needed)
+    DocumentRoot "{{ polywiki_apache_document_root }}"
+
+    # Logging
+    ErrorLog {{ polywiki_apache_vhost_log_dir }}/error.log
+    CustomLog {{ polywiki_apache_vhost_log_dir }}/access.log combined
+    LogLevel warn
+    ServerSignature Off
+
+    # Character encoding
+    AddDefaultCharset ISO-8859-1
+
+    # SSL Configuration (certificats auto-signés générés par Ansible)
+    SSLEngine on
+    SSLCertificateFile      "{{ polywiki_ssl_cert_file }}"
+    SSLCertificateKeyFile   "{{ polywiki_ssl_key_file }}"
+    SSLCertificateChainFile "{{ polywiki_ssl_chain_file }}"
+
+    # SSL Protocol and Ciphers (modern configuration)
+    SSLProtocol ALL -SSLv2 -SSLv3 -TLSv1 -TLSv1.1
+    SSLCipherSuite HIGH:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!3DES:!MD5:!PSK
+    SSLHonorCipherOrder on
+
+    # Include proxy and rewrite rules
+    Include {{ polywiki_apache_conf_dir }}/polywiki-proxy.conf
+</VirtualHost>
+{% endif %}
+
+################################################################################
+# Legacy domain redirects
+################################################################################
+{% for redirect in polywiki_apache_legacy_redirects | default([]) %}
+
+<VirtualHost *:80>
+    ServerName {{ redirect.from }}
+    ServerAlias {{ redirect.from | replace('.epfl.ch', '') }}
+    RewriteEngine On
+{% if polywiki_apache_enable_https | default(true) %}
+    RewriteRule (.*) https://{{ polywiki_apache_server_name }}{{ redirect.to | default('') }}$1 [R=301,L]
+{% else %}
+    RewriteRule (.*) http://{{ polywiki_apache_server_name }}{{ redirect.to | default('') }}$1 [R=301,L]
+{% endif %}
+</VirtualHost>
+
+{% if polywiki_apache_enable_https | default(true) %}
+<VirtualHost *:443>
+    ServerName {{ redirect.from }}
+    ServerAlias {{ redirect.from | replace('.epfl.ch', '') }}
+    SSLEngine on
+    SSLCertificateFile      "{{ polywiki_ssl_cert_file }}"
+    SSLCertificateKeyFile   "{{ polywiki_ssl_key_file }}"
+    RewriteEngine On
+    RewriteRule (.*) https://{{ polywiki_apache_server_name }}{{ redirect.to | default('') }}$1 [R=301,L]
+</VirtualHost>
+{% endif %}
+{% endfor %}
