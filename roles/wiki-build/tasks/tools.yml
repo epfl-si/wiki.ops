@@ -32,3 +32,7 @@
     state: link
     src: "{{ build_install_gradle_dir }}/bin/gradle"
     dest: /usr/local/bin/gradle
+
+- name: Git
+  ansible.builtin.yum:
+    name: git-core
