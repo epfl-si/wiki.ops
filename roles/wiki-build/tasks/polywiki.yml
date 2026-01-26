@@ -12,3 +12,11 @@
     repo: "{{ build_polywiki_git_repository }}"
     version: feat/migration-entraid
     dest: "{{ build_dir }}"
+
+- name: "Build with Gradle"
+  ansible.builtin.shell:
+    cmd: gradle war
+    chdir: "{{ build_dir }}"
+  register: _gradle_build
+  changed_when: >-
+    " executed, " in _gradle_build.stdout
