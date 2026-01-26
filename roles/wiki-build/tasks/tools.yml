@@ -37,6 +37,7 @@
     "ALREADY_DONE" not in _github_tofu.stdout
   ansible.builtin.shell:
     cmd: |
+      set -e -x
       if grep -q github.com $HOME/.ssh/known_hosts; then
         echo "ALREADY_DONE"
         exit 0

@@ -1,0 +1,8 @@
+- tags: always
+  include_vars: build-vars.yml
+
+- name: "{{ build_dir }}"
+  ansible.builtin.git:
+    repo: "{{ build_polywiki_git_repository }}"
+    refspec: feat/migration-entraid
+    dest: "{{ build_dir }}"
