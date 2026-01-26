@@ -1,13 +1,3 @@
-- name: "Build directories"
-  tags: always
-  ansible.builtin.file:
-    state: directory
-    path: "{{ item }}"
-    recurse: true
-  with_items:
-    - /srv/wiki/tmp
-    - /srv/wiki/build
-
 - name: "Build tools"
   include_tasks:
     file: tools.yml
