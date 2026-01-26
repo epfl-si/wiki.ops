@@ -8,3 +8,14 @@
   tags:
     - build
     - build.tools
+
+- name: "Build Polywiki"
+  include_tasks:
+    file: polywiki.yml
+    apply:
+      tags:
+        - build
+        - build.polywiki
+  tags:
+    - build
+    - build.polywiki
