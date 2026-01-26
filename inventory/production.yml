@@ -1,11 +1,14 @@
 vms:
-  hosts:
-    # https://portal-xaas-its.epfl.ch/automation/#/service/catalog/deployment/f8bcb113-9e53-4b61-9985-5a837e5add05
-    itsblgwk0003.xaas.epfl.ch:
-      inventory_web_hostname: wiki.epfl.ch
-      inventory_deployment_stage: production
-      ansible_python_interpreter: /usr/bin/python3.12
-      ansible_user: root
+  children:
+    vms-prod:
+      vars:
+        inventory_deployment_stage: production
+      hosts:
+        # https://portal-xaas-its.epfl.ch/automation/#/service/catalog/deployment/f8bcb113-9e53-4b61-9985-5a837e5add05
+        itsblgwk0003.xaas.epfl.ch:
+          inventory_web_hostname: wiki.epfl.ch
+          ansible_python_interpreter: /usr/bin/python3.12
+          ansible_user: root
 legacy:
   hosts:
     www10:
