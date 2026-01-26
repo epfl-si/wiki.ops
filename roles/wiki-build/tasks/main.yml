@@ -1,0 +1,10 @@
+- name: "Build tools"
+  include_tasks:
+    file: tools.yml
+    apply:
+      tags:
+        - build
+        - build.tools
+  tags:
+    - build
+    - build.tools

@@ -6,4 +6,13 @@
     - role: roles/rhel-apache-tomcat
       vars:
         apache_tomcat_dn_cn: "{{ inventory_web_hostname }}"
+
+- hosts: vms-test
+  gather_facts: no
+  roles:
+    - roles/wiki-build
+
+- hosts: vms
+  gather_facts: no
+  roles:
     - roles/wiki-app
