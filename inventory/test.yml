@@ -9,3 +9,4 @@ vms:
           inventory_web_hostname: wiki-test.epfl.ch
           ansible_python_interpreter: /usr/bin/python3.12
           ansible_user: root
+          ansible_ssh_args: " -o ForwardAgent=yes"   # In order to clone from private GitHub repo
