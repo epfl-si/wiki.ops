@@ -1,0 +1,6 @@
+# gradle_version is from ../../../vars/versions.yml
+build_gradle_download_url: https://services.gradle.org/distributions/gradle-{{ gradle_version }}-bin.zip
+
+build_gradle_download_zip: "/srv/wiki/tmp/{{ build_gradle_download_url | basename }}"
+
+build_install_gradle_dir: "/opt/gradle/gradle-{{ gradle_version }}"

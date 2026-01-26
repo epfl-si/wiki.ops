@@ -1,0 +1,34 @@
+- tags: always
+  include_vars: "{{ item }}"
+  with_items:
+  - build-vars.yml
+  - ../../../vars/versions.yml
+
+- name: "Temp directory for downloads"
+  ansible.builtin.file:
+    state: directory
+    path: "{{ build_gradle_download_zip | dirname }}"
+    recurse: true
+
+- name: Download Gradle
+  ansible.builtin.get_url:
+    url:  "{{ build_gradle_download_url }}"
+    dest: "{{ build_gradle_download_zip }}"
+
+- name: "{{ build_install_gradle_dir | dirname}}"
+  ansible.builtin.file:
+    state: directory
+    path: "{{ build_install_gradle_dir | dirname}}"
+    recurse: true
+
+- name: Unpack Gradle
+  ansible.builtin.unarchive:
+    src:  "{{ build_gradle_download_zip }}"
+    dest: "{{ build_install_gradle_dir | dirname}}"
+    remote_src: true
+
+- name: Symlink Gradle
+  ansible.builtin.file:
+    state: link
+    src: "{{ build_install_gradle_dir }}/bin/gradle"
+    dest: /usr/local/bin/gradle
