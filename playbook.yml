@@ -91,12 +91,6 @@
         - app
         - deploy
 
-    # Configuration Apache (vhost, SSL, proxy)
-    - role: polywiki_apache
-      tags:
-        - apache
-        - webserver
-
   post_tasks:
     - name: Vérifier les services
       ansible.builtin.service_facts:

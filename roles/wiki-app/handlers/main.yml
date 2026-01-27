@@ -1,0 +1,5 @@
+# These tasks are called handlers; they are only executed if
+# “notified” at least once by another task in ../tasks
+- name: _apache_needs_restart
+  set_fact:
+    _apache_needs_restart: true

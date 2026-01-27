@@ -1,0 +1,54 @@
+- tags: always
+  include_vars: "{{ item }}"
+  with_items:
+    - wiki-vars.yml
+    - apache-vars.yml
+
+- name: "Apache serving directories"
+  ansible.builtin.file:
+    state: directory
+    path: "{{ item.path }}"
+    recurse: yes
+    mode: "{{ item.mode | default('0755') }}"
+  with_items:
+    - path: "{{ apache_logs_dir }}"
+      mode: "01777"
+    - path: "{{ apache_document_root }}"
+    - path: "{{ apache_tls_key | dirname }}"
+    - path: "{{ apache_tls_cert | dirname }}"
+
+- name: "Apache TLS key"
+  ansible.builtin.shell:
+    creates: "{{ apache_tls_key }}"
+    cmd: |
+      openssl genrsa -out "{{ apache_tls_key }}" 2048
+
+- name: "Apache TLS self-signed certificate"
+  ansible.builtin.shell:
+    creates: "{{ apache_tls_cert }}"
+    cmd: |
+      openssl req -x509 -nodes \
+        -key "{{ apache_tls_key }}" -out "{{ apache_tls_cert }}" \
+        -days 3650 \
+        -subj "/C=CH/ST=Vaud/L=Lausanne/O=EPFL/CN={{ inventory_web_hostname }}" 
+
+- name: "Apache configuration files"
+  ansible.builtin.copy:
+    content: >-
+      {{ lookup("template", item) }}
+    dest: "{{ apache_conf_d_directory }}/{{ item }}"
+  with_items:
+    - polywiki.conf
+    - polywiki-proxy.conf
+
+  notify: _apache_needs_restart
+
+- meta: flush_handlers   # May set _apache_needs_restart
+
+- name: "httpd.service"
+  ansible.builtin.systemd_service:
+    name: "httpd.service"
+    enabled: true
+    state: >-
+      {{ "restarted" if  _apache_needs_restart is defined
+         else "started" }}
