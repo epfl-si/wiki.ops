@@ -3,3 +3,11 @@
 - name: _apache_needs_restart
   set_fact:
     _apache_needs_restart: true
+
+- name: systemctl daemon-reload
+  ansible.builtin.shell:
+    cmd: systemctl daemon-reload
+
+- name: _tomcat_needs_restart
+  set_fact:
+    _tomcat_needs_restart: true

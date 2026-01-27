@@ -23,6 +23,7 @@
   register: _gradle_build
   changed_when: >-
     " executed, " in _gradle_build.stdout
+  notify: _tomcat_needs_restart  # in ../../../roles/wiki-app/
 
 - name: "{{ polywiki_war_filename | dirname }}"
   ansible.builtin.file:
