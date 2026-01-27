@@ -1,1 +1,2 @@
 nfs_mount_path: /srv/wiki/files
+polywiki_war_filename: /srv/wiki/tomcat/polywiki.war
