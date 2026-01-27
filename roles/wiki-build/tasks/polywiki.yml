@@ -1,5 +1,8 @@
 - tags: always
-  include_vars: build-vars.yml
+  include_vars: "{{ item }}"
+  with_items:
+    - build-vars.yml
+    - global-vars.yml  # For polywiki_war_filename
 
 - name: "`{{ build_dir | dirname }}`"
   ansible.builtin.file:
@@ -20,3 +23,15 @@
   register: _gradle_build
   changed_when: >-
     " executed, " in _gradle_build.stdout
+
+- name: "{{ polywiki_war_filename | dirname }}"
+  ansible.builtin.file:
+    state: directory
+    recurse: yes
+    path: "{{ polywiki_war_filename | dirname }}"
+
+- name: "Install to {{ polywiki_war_filename }}"
+  ansible.builtin.copy:
+    remote_src: yes
+    src: "{{ build_dir }}//build/libs/build.war"
+    dest: "{{ polywiki_war_filename }}"
