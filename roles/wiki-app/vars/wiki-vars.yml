@@ -6,3 +6,5 @@ _wiki_nfs_volumes:
 
 wiki_nfs_volume: >-
   {{ _wiki_nfs_volumes[inventory_deployment_stage] }}
+
+wiki_tomcat_servlet_port: 7080
