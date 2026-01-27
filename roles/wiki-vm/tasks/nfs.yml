@@ -1,0 +1,17 @@
+- tags: always
+  include_vars: "{{ item }}"
+  with_items:
+    - ../../../vars/global-vars.yml
+    - nfs-vars.yml
+
+- name: "{{ nfs_mount_path }}: the directory"
+  ansible.builtin.file:
+    dest: "{{ nfs_mount_path }}"
+    state: directory
+
+- name: "{{ nfs_mount_path }}: the mount point"
+  ansible.builtin.mount:
+    path: "{{ nfs_mount_path }}"
+    src: "{{ nfs_volume }}"
+    fstype: nfs
+    state: mounted

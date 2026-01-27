@@ -57,3 +57,13 @@
   tags:
     - vm
     - vm.mariadb
+
+- include_tasks:
+    file: nfs.yml
+    apply:
+      tags:
+        - vm
+        - vm.nfs
+  tags:
+    - vm
+    - vm.nfs
