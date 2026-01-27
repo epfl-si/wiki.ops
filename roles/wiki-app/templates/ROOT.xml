@@ -1,0 +1,13 @@
+<!-- So-called “deployment descriptor” for the servlet at the root URL.
+     Managed by Ansible (`wikisible -t app.tomcat`); do not edit -->
+<Context docBase="{{ polywiki_war_filename }}" reloadable="false">
+  {# https://stackoverflow.com/a/66805452 #}
+    <Loader jakartaConverter="TOMCAT" />
+
+    <Resources className="org.apache.catalina.webresources.StandardRoot">
+    <PreResources
+      className="org.apache.catalina.webresources.DirResourceSet"
+      base="{{ wiki_tomcat_catalina_home }}/webapps/ROOT/WEB-INF/classes"
+      webAppMount="/WEB-INF/classes"/>
+    </Resources>
+</Context>

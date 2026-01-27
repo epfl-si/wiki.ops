@@ -1,16 +1,14 @@
 <?xml version='1.0' encoding='utf-8'?>
 <!-- Managed by Ansible - do not edit manually -->
-<!DOCTYPE server-xml [
-  <!ENTITY connector-http SYSTEM "connector-http-{{ polywiki_tomcat_http_port }}-wiki.xml">
-]>
-<Server port="{{ polywiki_tomcat_shutdown_port }}" shutdown="SHUTDOWN">
+<!DOCTYPE server-xml>
+<Server>
 
   <!-- Security listener -->
   <Listener className="org.apache.catalina.security.SecurityListener" />
-  
+
   <!-- APR library loader -->
   <Listener className="org.apache.catalina.core.AprLifecycleListener" SSLEngine="on" />
-  
+
   <!-- Prevent memory leaks -->
   <Listener className="org.apache.catalina.core.JreMemoryLeakPreventionListener" />
   <Listener className="org.apache.catalina.mbeans.GlobalResourcesLifecycleListener" />
@@ -27,7 +25,20 @@
   <Service name="Catalina">
 
     <!-- HTTP Connector -->
-    &connector-http;
+    <Connector port="{{ wiki_tomcat_servlet_port }}"
+           protocol="HTTP/1.1"
+           connectionTimeout="20000"
+           maxThreads="200"
+           minSpareThreads="10"
+           enableLookups="false"
+           acceptCount="100"
+           URIEncoding="UTF-8"
+           useBodyEncodingForURI="true"
+           proxyName="{{ inventory_web_hostname }}"
+           proxyPort="443"
+           scheme="https"
+           secure="true" />
+
 
     <Engine name="Catalina" defaultHost="localhost">
 
@@ -37,10 +48,9 @@
       </Realm>
 
       <Host name="localhost" appBase="webapps"
-            unpackWARs="true" autoDeploy="true">
-
-        <Valve className="org.apache.catalina.valves.AccessLogValve" 
-               directory="{{ polywiki_logs_dir }}"
+            unpackWARs="false" autoDeploy="false">
+        <Valve className="org.apache.catalina.valves.AccessLogValve"
+               directory="{{ wiki_tomcat_catalina_home }}/logs"
                prefix="access_log" suffix=".txt"
                pattern="%h %l %u %t &quot;%r&quot; %s %b" />
 
@@ -48,4 +58,3 @@
     </Engine>
   </Service>
 </Server>
-
