@@ -45,3 +45,13 @@
   tags:
     - app
     - app.apache
+
+- include_tasks:
+    file: tomcat.yml
+    apply:
+      tags:
+        - app
+        - app.tomcat
+  tags:
+    - app
+    - app.tomcat

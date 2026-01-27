@@ -1,0 +1,15 @@
+# Logrotate configuration for polywiki
+# Managed by Ansible - do not edit manually
+
+{{ wiki_tomcat_catalina_home }}/logs/*.log {{ wiki_tomcat_catalina_home }}/logs/catalina.out {
+    su tomcat tomcat
+    daily
+    rotate 30
+    missingok
+    notifempty
+    compress
+    delaycompress
+    copytruncate
+    dateext
+    dateformat -%Y%m%d
+}

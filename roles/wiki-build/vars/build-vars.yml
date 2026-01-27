@@ -7,3 +7,5 @@ build_install_gradle_dir: "/opt/gradle/gradle-{{ gradle_version }}"
 
 build_polywiki_git_repository: git@github.com:epfl-si/polywiki
 build_dir: /srv/wiki/build
+
+build_war: "{{ build_dir }}/build/libs/build.war"

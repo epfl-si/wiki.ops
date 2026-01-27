@@ -79,18 +79,6 @@
         - users
         - setup
 
-    # Configuration Tomcat (server.xml, web.xml, connecteurs)
-    - role: polywiki_tomcat
-      tags:
-        - tomcat
-        - config
-
-    # Déploiement de l'application (WAR, injection secrets, archivage)
-    - role: polywiki_app
-      tags:
-        - app
-        - deploy
-
   post_tasks:
     - name: Vérifier les services
       ansible.builtin.service_facts:

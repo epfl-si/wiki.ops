@@ -1,0 +1,196 @@
+- tags: always
+  include_vars: "{{ item }}"
+  with_items:
+    - wiki-vars.yml
+    - ../../../vars/global-vars.yml
+
+- name: "Tomcat read-only directories"
+  ansible.builtin.file:
+    state: directory
+    recurse: yes
+    path: "{{ item }}"
+  with_items:
+    - "{{ wiki_tomcat_catalina_home }}/webapps/ROOT/WEB-INF/classes"
+    - "{{ wiki_tomcat_catalina_home }}/conf/Catalina/localhost"
+
+- name: "Tomcat writable directories"
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    recurse: yes
+    mode: 01777
+  with_items:
+    - "{{ wiki_tomcat_catalina_home }}/logs"
+    - "{{ wiki_tomcat_catalina_home }}/work"
+
+- name: "Tomcat general configuration file: `{{ _server_xml_path }}`"
+  ansible.builtin.copy:
+    dest: "{{ _server_xml_path }}"
+    content: >-
+      {{ lookup("template", "server.xml") }}
+  vars:
+    _server_xml_path: "{{ wiki_tomcat_catalina_home }}/conf/server.xml"
+  notify: _tomcat_needs_restart
+
+- name: "Tomcat configuration file (“deployment descriptor”) for the root app: `{{ _ROOT_xml_path }}`"
+  ansible.builtin.copy:
+    dest: "{{ _ROOT_xml_path }}"
+    content: >-
+      {{ lookup("template", "ROOT.xml") }}
+  vars:
+    _ROOT_xml_path: >-
+      {{ wiki_tomcat_catalina_home }}/conf/Catalina/localhost/ROOT.xml
+  notify: _tomcat_needs_restart
+
+- name: "Templated properties files"
+  ansible.builtin.copy:
+    dest: "{{ wiki_tomcat_catalina_home }}/webapps/ROOT/WEB-INF/classes/{{ item }}"
+    content: >-
+      {{ lookup("template", item) }}
+  with_items:
+    - appilis.application.properties
+    - log4j.properties
+    - hibernate.cfg.xml
+  notify: _tomcat_needs_restart
+
+- name: "Extracted properties files"
+  # ... because some packages like `ehcache` can't be bothered to
+  # follow the same URL conventions as the rest of the Java platform 🤷‍♂️
+  ansible.builtin.unarchive:
+    src: "{{ polywiki_war_filename }}"
+    remote_src: true
+    dest: "{{ wiki_tomcat_catalina_home }}/webapps/ROOT"
+    include:
+      - WEB-INF/classes/ehcache.xml
+      - WEB-INF/classes/antisamy-ebay-1.4.1.xml
+      - WEB-INF/classes/antisamy-bare.xml
+  notify: _tomcat_needs_restart
+
+- name: "Delete obsolete /etc/systemd/system/tomcat-wiki.service"
+  ansible.builtin.file:
+    state: absent
+    path: /etc/systemd/system/tomcat-wiki.service
+  notify: systemctl daemon-reload  # See ../handlers/main.yml
+
+- name: "{{ wiki_tomcat_systemd_service_file | dirname }}"
+  ansible.builtin.file:
+    state: directory
+    recurse: yes
+    path: "{{ wiki_tomcat_systemd_service_file | dirname }}"
+  notify: _tomcat_needs_restart
+
+- name: "{{ wiki_tomcat_systemd_service_file }}"
+  notify:
+    - systemctl daemon-reload
+    - _tomcat_needs_restart
+  ansible.builtin.copy:
+    dest: "{{ wiki_tomcat_systemd_service_file }}"
+    content: |
+      ; This file is managed by Ansible (`wikisible -t app.tomcat`)
+      [Unit]
+      Description=Apache Tomcat instance for polywiki (wiki)
+      Documentation=https://tomcat.apache.org/
+      After=network.target remote-fs.target nss-lookup.target
+
+      [Service]
+      Environment="CATALINA_BASE={{ wiki_tomcat_catalina_home }}"
+      Environment="JAVA_HOME={{ wiki_tomcat_jdk_path }}"
+      Environment="CATALINA_OPTS={{ " ".join(_catalina_opts) }}"
+
+      WorkingDirectory={{ wiki_tomcat_catalina_home }}
+
+      [Install]
+      WantedBy=multi-user.target
+  vars:
+    _catalina_opts:
+      - -Djava.net.preferIPv4Stack=true
+      - -Dorg.apache.catalina.security.SecurityListener.UMASK=0007
+
+- when: tomcat_debug is defined
+  name: "Install `tomcat-admin-webapps` RPM"
+  ansible.builtin.dnf:
+    name: tomcat-admin-webapps
+
+- name: >-
+    Tomcat dashboard: {{ "enabled" if tomcat_debug is defined else "disabled" }}
+  ansible.builtin.file:
+    state: >-
+      {{ "link" if tomcat_debug is defined else "absent" }}
+    src: >-
+      {{ "/var/lib/tomcat/webapps/%s" % item
+      if tomcat_debug is defined
+      else None
+      }}
+    dest: "{{ wiki_tomcat_catalina_home }}/webapps/{{ item }}"
+  with_items:
+    - manager
+    - host-manager
+
+- name: "Tomcat dashboard authentication ({{ _users_xml_path }})"
+  ansible.builtin.copy:
+    dest: "{{ _users_xml_path }}"
+    force: false  # In case there's already a password in there, we don't want
+                  # to overwrite it
+    content: |
+      <?xml version="1.0" encoding="UTF-8"?>
+      <!-- Managed by Ansible - do not edit manually -->
+      <tomcat-users xmlns="http://tomcat.apache.org/xml"
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xsi:schemaLocation="http://tomcat.apache.org/xml
+                    http://tomcat.apache.org/xml/tomcat-users.xsd"
+              version="1.0">
+        <role rolename="manager-gui"/>
+        <user username="tomcat" password="{{ _tomcat_password }}"
+              roles="manager-gui"/>
+      </tomcat-users>
+  notify: _tomcat_needs_restart
+  vars:
+    _users_xml_path: "{{ wiki_tomcat_catalina_home }}/conf/tomcat-users.xml"
+    _tomcat_password: >-
+      {{ lookup("community.general.random_string", length=8)
+      | ansible.builtin.escape }}
+
+- meta: flush_handlers   # May set _tomcat_needs_restart
+
+- name: Stat WAR file
+  ansible.builtin.stat:
+    path: "{{ polywiki_war_filename }}"
+  register: _tomcat_stat_war
+
+- name: Obtain Tomcat start time
+  ansible.builtin.command: |
+    env TZ=UTC systemctl show {{ wiki_tomcat_systemd_service_name }} \
+      --property=ActiveEnterTimestamp
+  register: _tomcat_systemctl_show
+  changed_when: false
+
+- name: "{{ wiki_tomcat_systemd_service_name }}"
+  ansible.builtin.systemd_service:
+    name: "{{ wiki_tomcat_systemd_service_name }}"
+    enabled: true
+    state: >-
+      {{ "restarted"
+        if (
+          (_tomcat_needs_restart is defined)
+          or
+          (
+            ( _tomcat_start_time
+            and (_tomcat_start_time < _tomcat_war_time))
+          )
+        )
+        else "started" }}
+  vars:
+    _tomcat_start_time: >-
+      {{ ( (_tomcat_systemctl_show.stdout
+            | regex_replace('^ActiveEnterTimestamp=[A-Za-z]* (.+) UTC', '\1')
+            | to_datetime('%Y-%m-%d %H:%M:%S')).timestamp() | int
+         ) if " UTC" in _tomcat_systemctl_show.stdout
+         else None }}
+    _tomcat_war_time: >-
+      {{ _tomcat_stat_war.stat.mtime | int }}
+
+- name: Tomcat log rotation
+  ansible.builtin.copy:
+    content: >-
+      {{ lookup("template", "logrotate-polywiki") }}
+    dest: /etc/logrotate.d/tomcat@wiki
