@@ -1,0 +1,6 @@
+_nfs_volumes:
+  test:       nas-app-ma-nfs2.epfl.ch:/svc0070_wiki_test_app
+  production: nas-app-ma-nfs1.epfl.ch:/si_blog_wiki_app
+
+nfs_volume: >-
+  {{ _nfs_volumes[inventory_deployment_stage] }}
