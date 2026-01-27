@@ -35,3 +35,13 @@
     - app.migrate
     - app.migrate.legacy-backup
     - app.migrate.restore
+
+- include_tasks:
+    file: apache.yml
+    apply:
+      tags:
+        - app
+        - app.apache
+  tags:
+    - app
+    - app.apache

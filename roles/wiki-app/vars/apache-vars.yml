@@ -1,0 +1,12 @@
+apache_conf_d_directory: /etc/httpd/conf.d
+
+apache_server_aliases:
+  - wiki.epfl.ch
+  - wiki-test.epfl.ch
+  - "{{ inventory_hostname }}"
+
+apache_logs_dir: /var/www/vhosts/{{ inventory_web_hostname }}/logs/
+apache_document_root: /var/www/vhosts/{{ inventory_web_hostname }}/htdocs/
+
+apache_tls_key:  /var/www/vhosts/{{ inventory_web_hostname }}/tls/key.pem
+apache_tls_cert:  /var/www/vhosts/{{ inventory_web_hostname }}/tls/cert.pem
