@@ -102,9 +102,16 @@
       [Install]
       WantedBy=multi-user.target
   vars:
-    _catalina_opts:
+    _catalina_opts: >-
+      {{ _catalina_opts_always +
+      (_catalina_opts_debugger if tomcat_debugger_port is defined else [])
+      }}
+    _catalina_opts_always:
       - -Djava.net.preferIPv4Stack=true
       - -Dorg.apache.catalina.security.SecurityListener.UMASK=0007
+    _catalina_opts_debugger:
+      - -Xdebug
+      - -Xrunjdwp:transport=dt_socket,address=127.0.0.1:{{ tomcat_debugger_port }},server=y,suspend=n
 
 - when: tomcat_debug is defined
   name: "Install `tomcat-admin-webapps` RPM"
