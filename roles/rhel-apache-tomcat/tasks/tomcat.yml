@@ -60,10 +60,7 @@
       owner: "{{ tomcat_user }}"
       group: "{{ tomcat_group }}"
 
-- name: systemd service for Tomcat enabled and started
+- name: systemd service for Tomcat disabled and stopped
   ansible.builtin.systemd_service:
     name: tomcat
-    enabled: true
-    state: >-
-     {{ "restarted" if _tomcat_sysconfig | default({}) is changed
-     else "started" }}
+    enabled: false
