@@ -3,15 +3,23 @@
     "-//Hibernate/Hibernate Configuration DTD//EN"
     "http://www.hibernate.org/dtd/hibernate-configuration-3.0.dtd">
 
+<!--
+{% if wiki_secrets.mariadb.ssl | default(False) %}
+{%   set use_SSL = "true" %}
+{% else %}
+{%   set use_SSL = "false" %}
+{% endif %}
+-->
+
 <hibernate-configuration>
 
   <session-factory>
     <!-- database connection settings -->
     <property name="connection.driver_class">com.mysql.cj.jdbc.Driver</property>
-    <property name="connection.url">jdbc:mysql://{{ wiki_secrets.mariadb.server }}/{{ wiki_secrets.mariadb.dbname }}?autoReconnect=true&amp;useSSL=false&amp;serverTimezone=UTC</property>
+    <property name="connection.url">jdbc:mysql://{{ wiki_secrets.mariadb.server }}/{{ wiki_secrets.mariadb.dbname }}?autoReconnect=true&amp;useSSL={{ use_SSL }}&amp;serverTimezone=UTC</property>
     <property name="connection.username">{{ wiki_secrets.mariadb.username }}</property>
     <property name="connection.password">{{ wiki_secrets.mariadb.password }}</property>
-    <property name="connection.useSSL">{{ "true" if wiki_secrets.mariadb.ssl | default(False) else "false" }}</property>
+    <property name="connection.useSSL">{{ use_SSL }}</property>
 
     <!-- connection pool via c3p0 -->
     <property name="c3p0.min_size">2</property>
