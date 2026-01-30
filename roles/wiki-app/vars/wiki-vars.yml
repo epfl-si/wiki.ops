@@ -16,8 +16,3 @@ wiki_tomcat_systemd_service_file: >-
   /etc/systemd/system/{{ wiki_tomcat_systemd_service_name }}.d/ansible-managed.conf
 
 wiki_tomcat_jdk_path: /usr/lib/jvm/java-17-openjdk
-
-_wiki_secrets_file: "/keybase/team/epfl_wiki/polywiki-{{ inventory_deployment_stage }}.yml"
-wiki_secrets: >-
-  {{ lookup("pipe", "keybase fs read %s" % _wiki_secrets_file)
-  | from_yaml }}

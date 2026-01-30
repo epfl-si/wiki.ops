@@ -1,2 +1,7 @@
 nfs_mount_path: /srv/wiki/files
 polywiki_war_filename: /srv/wiki/tomcat/polywiki.war
+
+_wiki_secrets_file: "/keybase/team/epfl_wiki/polywiki-{{ inventory_deployment_stage }}.yml"
+wiki_secrets: >-
+  {{ lookup("pipe", "keybase fs read %s" % _wiki_secrets_file)
+  | from_yaml }}

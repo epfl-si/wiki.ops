@@ -2,7 +2,7 @@
   include_vars: "{{ item }}"
   with_items:
     - s3-vars.yml
-    - mariadb-vars.yml
+    - ../../../vars/global-vars.yml
 
 - name: Perform backup
   run_once: true
@@ -23,6 +23,6 @@
                    p
           }' \
         | sed -e 's/^\(CREATE DATABASE.*\|USE.*\)`polywiki`/\1`{{
-                             mariadb_credentials.database }}`/' \
+                             wiki_secrets.mariadb.dbname }}`/' \
               -e 's|ENGINE=MyISAM | |g' \
-        | mariadb {{ mariadb_credentials.database }}
+        | mariadb {{ wiki_secrets.mariadb.dbname }}
