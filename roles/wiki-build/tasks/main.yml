@@ -19,3 +19,16 @@
   tags:
     - build
     - build.polywiki
+
+- name: "Install Polywiki"
+  include_tasks:
+    file: install.yml
+    apply:
+      tags:
+        - build
+        - install
+        - build.install
+  tags:
+    - build
+    - install
+    - build.install

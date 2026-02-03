@@ -1,0 +1,43 @@
+- tags: always
+  include_vars: "{{ item }}"
+  with_items:
+    - global-vars.yml  # For polywiki_war_filename
+
+- name: "{{ polywiki_war_filename | dirname }}"
+  ansible.builtin.file:
+    state: directory
+    recurse: yes
+    path: "{{ polywiki_war_filename | dirname }}"
+
+- name: "Install to {{ polywiki_war_filename }}"
+  when: inventory_deployment_stage != "production"
+  ansible.builtin.copy:
+    remote_src: yes
+    src: "{{ build_dir }}//build/libs/build.war"
+    dest: "{{ polywiki_war_filename }}"
+
+- name: "Copy to {{ polywiki_war_filename }}"
+  when: inventory_deployment_stage == "production"
+  delegate_to: localhost
+  register: _ssh_copy_script
+  changed_when: >-
+    "ALREADY_DONE" not in _ssh_copy_script.stderr
+  vars:
+    ansible_become: false
+    _ssh_source: root@itsblgwk0004.xaas.epfl.ch
+    _ssh_dest: "root@{{ inventory_hostname }}"
+  ansible.builtin.shell:
+    cmd: |
+      set -e -x
+
+      # Poor man's rsync(1), because “micro”segmentation prevents us from
+      # sshing from one node to another:
+      
+      if [ "$(ssh "{{ _ssh_source }}" sha256sum "{{ polywiki_war_filename }}")" \
+           = "$(ssh "{{ _ssh_dest }}" sha256sum "{{ polywiki_war_filename }}")"  ]; then
+           echo ALREADY_DONE >&2
+           exit 0
+      fi
+      ssh root@itsblgwk0004.xaas.epfl.ch cat "{{ polywiki_war_filename }}" \
+        |
+           ssh root@{{ inventory_hostname }} dd of="{{ polywiki_war_filename }}"

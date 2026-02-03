@@ -46,6 +46,14 @@
   roles:
     - roles/wiki-build
 
+- hosts: vms-prod
+  gather_facts: no
+  tasks:
+    - tags: install
+      include_role:
+        name: roles/wiki-build
+        tasks_from: install.yml
+
 - hosts: vms
   gather_facts: no
   roles:
