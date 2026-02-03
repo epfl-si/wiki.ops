@@ -4,12 +4,3 @@
 - name: nfs-utils
   dnf:
     name: nfs-utils
-
-- name: "{{ _wiki_mountpoint }}"
-  vars:
-    _wiki_mountpoint: /srv/wiki
-  ansible.posix.mount:
-    state: mounted
-    fstype: nfs
-    src: "{{ wiki_nfs_volume }}"
-    path: "{{ _wiki_mountpoint }}"
