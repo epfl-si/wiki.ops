@@ -1,4 +1,5 @@
 - name: Centos 9 signing keys
+  when: false   # https://github.com/ansible/ansible/issues/86157
   ansible.builtin.rpm_key:
     state: present
     # Believe it ot not, the one inside the RPM (below) is signed with SHA-1 🤦‍♂️
