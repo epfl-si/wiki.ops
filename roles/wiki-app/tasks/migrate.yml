@@ -10,13 +10,19 @@
   ansible.builtin.raw: /usr/local/bin/mysql-backup.sh day
   tags: app.migrate.legacy-backup
 
-- name: Restore from today's backup on s3
+- name: Download today's backup from s3
   tags: app.migrate.restore
-  shell:
+  ansible.builtin.shell:
     cmd: |
       set -exuo pipefail
-      aws s3 cp {{ s3_mysql_backup_path }} - \
-        | gzip -dc \
+      aws s3 cp {{ s3_mysql_backup_path }} /tmp/wiki-backup.sql.gz
+
+- name: Restore from today's backup
+  tags: app.migrate.restore
+  ansible.builtin.shell:
+    cmd: |
+      set -exuo pipefail
+      zcat /tmp/wiki-backup.sql.gz \
         | sed -n -e '/^CREATE DATABASE.*polywiki/,$p' \
         | sed -n -e '1p' -e '2,/^CREATE DATABASE/{
                    /^CREATE DATABASE/q
