@@ -3,3 +3,13 @@
     src: motd.txt
     dest: /etc/motd
     mode: 0644
+
+# https://access.redhat.com/solutions/6957934
+- name: Disable RedHat Web console motd
+  with_items:
+    - /etc/motd.d/cockpit
+    - /etc/issue.d/cockpit.issue
+  ansible.builtin.file:
+    state: link
+    src: /dev/null
+    dest: "{{ item }}"

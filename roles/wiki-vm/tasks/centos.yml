@@ -21,3 +21,10 @@
       grep -q "enabled=1" /etc/yum.repos.d/centos*.repo || exit 0
 
       sed -i.ansiblebak -e 's|enabled=1|enabled=0|g' /etc/yum.repos.d/centos*.repo
+
+- name: Un-Cockpit
+  dnf:
+    state: absent
+    name:
+      - cockpit
+      - cockpit-ws
