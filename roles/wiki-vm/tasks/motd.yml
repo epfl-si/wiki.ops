@@ -1,0 +1,5 @@
+- name: Deploy the message of the day
+  ansible.builtin.template:
+    src: motd.txt
+    dest: /etc/motd
+    mode: 0644

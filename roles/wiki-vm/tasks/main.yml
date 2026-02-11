@@ -67,3 +67,13 @@
   tags:
     - vm
     - vm.nfs
+
+- include_tasks:
+    file: motd.yml
+    apply:
+      tags:
+        - vm
+        - vm.motd
+  tags:
+    - vm
+    - vm.motd
