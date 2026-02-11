@@ -10,7 +10,6 @@
 - name: "`{{ build_dir }}`"
   ansible.builtin.git:
     repo: "{{ build_polywiki_git_repository }}"
-    version: feat/migration-entraid
     dest: "{{ build_dir }}"
 
 - name: "Build with Gradle"
