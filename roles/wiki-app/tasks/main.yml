@@ -18,24 +18,6 @@
     - app
     - app.storage
 
-- when: >-
-    "app.migrate" in ansible_run_tags
-    or
-    "app.migrate.legacy-backup" in ansible_run_tags
-    or
-    "app.migrate.restore" in ansible_run_tags
-  include_tasks:
-    file: migrate.yml
-    apply:
-      tags:
-        - app
-        - app.migrate
-  tags:
-    - app
-    - app.migrate
-    - app.migrate.legacy-backup
-    - app.migrate.restore
-
 - include_tasks:
     file: apache.yml
     apply:
