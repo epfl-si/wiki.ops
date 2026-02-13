@@ -1,5 +1,7 @@
 _nfs_volumes:
+  # https://portal-xaas-its.epfl.ch/automation/#/service/catalog/consume/deployment/68b4ebca-ee0f-41cf-9d81-e49c2989d407
   test:       nas-app-ma-nfs2.epfl.ch:/svc0070_wiki_test_app
+  # https://portal-xaas-its.epfl.ch/automation/#/service/catalog/consume/deployment/5c3fbf91-db24-4f7c-876f-82af9e0da057
   production: nas-app-ma-nfs1.epfl.ch:/si_blog_wiki_app
 
 nfs_volume: >-
