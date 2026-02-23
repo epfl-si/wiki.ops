@@ -64,12 +64,6 @@
       - WEB-INF/classes/antisamy-bare.xml
   notify: _tomcat_needs_restart
 
-- name: "Delete obsolete /etc/systemd/system/tomcat-wiki.service"
-  ansible.builtin.file:
-    state: absent
-    path: /etc/systemd/system/tomcat-wiki.service
-  notify: systemctl daemon-reload  # See ../handlers/main.yml
-
 - name: "{{ wiki_tomcat_systemd_service_file | dirname }}"
   ansible.builtin.file:
     state: directory
