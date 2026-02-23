@@ -7,7 +7,6 @@
 - name: "Tomcat read-only directories"
   ansible.builtin.file:
     state: directory
-    recurse: yes
     path: "{{ item }}"
   with_items:
     - "{{ wiki_tomcat_catalina_home }}/webapps/ROOT/WEB-INF/classes"
@@ -17,7 +16,6 @@
   ansible.builtin.file:
     path: "{{ item }}"
     state: directory
-    recurse: yes
     mode: 01777
   with_items:
     - "{{ wiki_tomcat_catalina_home }}/logs"
@@ -75,7 +73,6 @@
 - name: "{{ wiki_tomcat_systemd_service_file | dirname }}"
   ansible.builtin.file:
     state: directory
-    recurse: yes
     path: "{{ wiki_tomcat_systemd_service_file | dirname }}"
   notify: _tomcat_needs_restart
 

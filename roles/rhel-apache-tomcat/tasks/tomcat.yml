@@ -6,7 +6,6 @@
   ansible.builtin.file:
     path: "{{ tomcat_install_dir }}"
     state: directory
-    recurse: yes
 
 - vars:
     _tomcat_archive_basename: "{{ tomcat_archive_url | basename }}"
@@ -56,7 +55,6 @@
     ansible.builtin.file:
       path: "{{ tomcat_logs_dir }}"
       state: directory
-      recurse: yes
       owner: "{{ tomcat_user }}"
       group: "{{ tomcat_group }}"
 

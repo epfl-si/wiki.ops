@@ -6,7 +6,6 @@
 - name: "{{ polywiki_war_filename | dirname }}"
   ansible.builtin.file:
     state: directory
-    recurse: yes
     path: "{{ polywiki_war_filename | dirname }}"
 
 - name: "Install to {{ polywiki_war_filename }}"

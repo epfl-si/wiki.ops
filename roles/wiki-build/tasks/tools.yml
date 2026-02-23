@@ -8,7 +8,6 @@
   ansible.builtin.file:
     state: directory
     path: "{{ build_gradle_download_zip | dirname }}"
-    recurse: true
 
 - name: Download Gradle
   ansible.builtin.get_url:
@@ -19,7 +18,6 @@
   ansible.builtin.file:
     state: directory
     path: "{{ build_install_gradle_dir | dirname}}"
-    recurse: true
 
 - name: Unpack Gradle
   ansible.builtin.unarchive:

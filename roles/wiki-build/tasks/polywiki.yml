@@ -5,7 +5,6 @@
   ansible.builtin.file:
     state: directory
     path: "{{ build_dir | dirname }}"
-    recurse: true
 
 - name: "`{{ build_dir }}`"
   ansible.builtin.git:
